@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>【2026年版】本当に寝れるASMRおすすめ10選｜実際に眠れた作品だけ厳選</title>
+  <meta name="description" content="ASMRで本当に寝れる作品だけを厳選。耳かき・囁き・自然音など睡眠特化の10作品をプロが紹介。DLsite人気作を癒し度・抜き度つきで比較。" />
+  <style>
+    /* =============================================
+       ベーススタイル
+    ============================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      font-size: 16px;
+      line-height: 1.85;
+      color: #333;
+      background: #fafafa;
+    }
+
+    /* 記事全体の幅 */
+    .article-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+      background: #fff;
+    }
+
+    /* =============================================
+       見出し
+    ============================================= */
+    h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 900;
+      line-height: 1.4;
+      color: #1a1a1a;
+      border-left: 5px solid #e8485a;
+      padding-left: 14px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: clamp(1.1rem, 3vw, 1.35rem);
+      font-weight: 800;
+      color: #1a1a1a;
+      border-bottom: 3px solid #e8485a;
+      padding-bottom: 6px;
+      margin: 48px 0 20px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #222;
+      margin: 32px 0 12px;
+      padding: 8px 12px;
+      background: #f4f4f4;
+      border-left: 4px solid #e8485a;
+      border-radius: 0 6px 6px 0;
+    }
+
+    h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #555;
+      margin: 16px 0 6px;
+    }
+
+    p { margin-bottom: 14px; }
+
+    a { color: #e8485a; }
+    a:hover { opacity: 0.8; }
+
+    ul, ol {
+      padding-left: 1.4em;
+      margin-bottom: 14px;
+    }
+    li { margin-bottom: 4px; }
+
+    /* =============================================
+       CTAボタン（メイン）
+       ─ DLsiteへの主要な誘導ボタン ─
+    ============================================= */
+    .btn-cta {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin: 16px auto;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #e8485a 0%, #c0392b 100%);
+      color: #fff !important;
+      text-decoration: none;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border-radius: 50px;
+      box-shadow: 0 4px 14px rgba(232,72,90,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.04em;
+    }
+    .btn-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232,72,90,0.5);
+      opacity: 1;
+    }
+    .btn-cta::before { content: "🎧 "; }
+
+    /* サブテキスト（ボタン直下） */
+    .btn-sub {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: -8px;
+      margin-bottom: 16px;
+    }
+
+    /* ベネフィット型CTAボタン（結果を明記する大型ボタン） */
+    .btn-benefit {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin: 16px auto 4px;
+      padding: 18px 20px 14px;
+      background: linear-gradient(135deg, #e8485a 0%, #c0392b 100%);
+      color: #fff !important;
+      text-decoration: none;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(232,72,90,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.02em;
+      line-height: 1.5;
+    }
+    .btn-benefit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232,72,90,0.5);
+      opacity: 1;
+    }
+    /* ボタン上段（メインテキスト） */
+    .btn-benefit .btn-main {
+      display: block;
+      font-size: 1rem;
+    }
+    /* ボタン下段（ベネフィットテキスト） */
+    .btn-benefit .btn-benefit-text {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 400;
+      opacity: 0.9;
+      margin-top: 3px;
+    }
+
+    /* ランキングバッジ（🥇などと並べる順位表示） */
+    .rank-medal {
+      font-size: 1.1rem;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    /* =============================================
+       CTAボタン（ASMR Finder用）
+    ============================================= */
+    .btn-finder {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin: 16px auto;
+      padding: 15px 24px;
+      background: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
+      color: #fff !important;
+      text-decoration: none;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 800;
+      border-radius: 50px;
+      box-shadow: 0 4px 14px rgba(41,128,185,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.04em;
+    }
+    .btn-finder:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(41,128,185,0.5);
+      opacity: 1;
+    }
+    .btn-finder::before { content: "🔍 "; }
+
+    /* =============================================
+       各種ブロック
+    ============================================= */
+
+    /* 注目ボックス（結論・おすすめ） */
+    .box-pickup {
+      background: #fff8f8;
+      border: 2px solid #e8485a;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .box-pickup .box-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #e8485a;
+      margin-bottom: 10px;
+    }
+
+    /* ターゲット確認ボックス（冒頭） */
+    .box-target {
+      background: #1a1a1a;
+      color: #fff;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .box-target .box-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #f5c518;
+      margin-bottom: 10px;
+    }
+    .box-target li { color: #eee; margin-bottom: 6px; }
+
+    /* 警告・SEO補足ボックス */
+    .box-info {
+      background: #eaf4ff;
+      border-left: 4px solid #2980b9;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 18px;
+      margin: 24px 0;
+      font-size: 0.9rem;
+    }
+    .box-info .box-title {
+      font-weight: 800;
+      color: #1a5276;
+      margin-bottom: 8px;
+    }
+
+    /* 中間導線ボックス（ASMR Finder誘導） */
+    .box-finder {
+      background: linear-gradient(135deg, #eaf4ff 0%, #ddeeff 100%);
+      border: 1px solid #2980b9;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 40px 0;
+      text-align: center;
+    }
+    .box-finder .box-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1a5276;
+      margin-bottom: 8px;
+    }
+    .box-finder p { font-size: 0.88rem; color: #333; margin-bottom: 12px; }
+
+    /* 緊急性バッジ */
+    .badge-urgent {
+      display: inline-block;
+      background: #e8485a;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    /* 作品カード */
+    .work-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 32px 0;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* スコア表示 */
+    .score-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .score-item {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #444;
+    }
+    .score-item .heal { color: #27ae60; }
+    .score-item .ero  { color: #e8485a; }
+
+    /* こんな人に */
+    .recommend-list {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+    }
+    .recommend-list p {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    .recommend-list li {
+      font-size: 0.88rem;
+      color: #444;
+      margin-bottom: 3px;
+    }
+    .recommend-list li::marker { color: #e8485a; }
+
+    /* CTA前の一言 */
+    .cta-lead {
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #c0392b;
+      margin-bottom: 6px;
+    }
+
+    /* 比較表 */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.88rem;
+    }
+    .compare-table th {
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+    }
+    .compare-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e8e8e8;
+      vertical-align: top;
+    }
+    .compare-table tr:nth-child(even) td { background: #fafafa; }
+    .compare-table tr:first-child td { background: #fff8f8; font-weight: 700; }
+
+    /* 仕切り */
+    hr { border: none; border-top: 1px solid #eee; margin: 40px 0; }
+
+    /* まとめボックス */
+    .box-summary {
+      background: #1a1a1a;
+      color: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+    }
+    .box-summary h2 {
+      color: #f5c518;
+      border-bottom-color: #f5c518;
+      font-size: 1.1rem;
+      margin-top: 0;
+    }
+    .box-summary li { color: #eee; margin-bottom: 8px; }
+
+    /* 免責 */
+    .disclaimer {
+      font-size: 0.75rem;
+      color: #aaa;
+      border-top: 1px solid #eee;
+      padding-top: 16px;
+      margin-top: 40px;
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 480px) {
+      .compare-table { font-size: 0.78rem; }
+      .compare-table th, .compare-table td { padding: 8px 8px; }
+    }
+  </style>
+</head>
+<body>
+<div class="article-wrap">
+
+  <!-- ===== H1 ===== -->
+  <h1>【2026年版】本当に寝れるASMRおすすめ10選｜実際に眠れた作品だけ厳選</h1>
+
+  <!-- ===== ターゲット確認（冒頭強化） ===== -->
+  <div class="box-target">
+    <p class="box-title">⚠️ ハズレを引きたくない人だけ見てください</p>
+    <ul>
+      <li>✔ 試したけど全然眠れなかった経験がある</li>
+      <li>✔ 何が合うか分からず迷っている</li>
+      <li>✔ 今夜こそ絶対に早く眠りたい</li>
+    </ul>
+    <p style="margin-top:10px; font-size:0.88rem; color:#ccc;">この記事では「記憶が飛ぶレベルで眠れた」実績のある作品だけを紹介します。</p>
+  </div>
+
+  <!-- ===== はじめに ===== -->
+  <h2>はじめに</h2>
+  <p>「ASMRで寝たいのに、なかなか眠れない…」</p>
+  <p><strong>この記事を最後まで読めば、今夜から寝不足が解消できます。</strong>なぜなら「実際に眠れた」実績のある作品だけを、ジャンル・用途別に厳選して紹介しているからです。</p>
+  <p>そんな人のために、この記事では<strong>「記憶が飛ぶレベルで眠れた作品」だけを厳選</strong>して紹介します。</p>
+
+  <!-- ===== 🔥 結論（ファースト） ===== -->
+  <div class="box-pickup">
+    <p class="box-title">🔥 迷ったらこれ（結論）</p>
+    <p><strong>全部読む時間がない人へ。結論だけ先に言います。</strong></p>
+    <p>一番寝れる作品は<strong>「耳かき専門店〜眠れない夜の施術〜」</strong>の一択です。<br>「かけた瞬間に意識が飛んだ」「気づいたら朝になってた」という声が続出。</p>
+    <p class="cta-lead">👆 人気作なので早めにチェック推奨です</p>
+    <a href="https://www.dlsite.com/" class="btn-cta" target="_blank" rel="noopener">今すぐDLsiteで聴く → 無料試聴あり</a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ===== SEO補強：眠れない原因 ===== -->
+  <h2>ASMRで寝れない原因とは？</h2>
+  <div class="box-info">
+    <p class="box-title">📋 よくある3つの原因</p>
+    <ul>
+      <li><strong>① 作品選びのミス：</strong>刺激が強すぎる・ストーリーが気になる作品は逆に覚醒します</li>
+      <li><strong>② 聴き方の問題：</strong>スマホ画面を見ながら聴くと光刺激で眠れません。画面を伏せて音だけに集中しましょう</li>
+      <li><strong>③ タイミングのズレ：</strong>布団に入る前に聴くより、<strong>布団に入ってから</strong>かけるほうが効果的です</li>
+    </ul>
+  </div>
+  <p>つまり「ASMRで眠れない」のは作品が悪いのではなく、<strong>選び方・使い方</strong>の問題がほとんどです。この記事では「正しく選べば確実に眠れる作品」だけを紹介します。</p>
+
+  <!-- ===== 選び方 ===== -->
+  <h2>寝れるASMRの選び方（失敗しない3つのポイント）</h2>
+  <h3>✔ 癒し度が高いものを選ぶ</h3>
+  <p>睡眠目的なら<strong>「癒し度4〜5」</strong>が鉄板です。刺激が強すぎると脳が興奮して逆に目が覚めます。</p>
+  <h3>✔ 耳かき・囁き系が最強</h3>
+  <p>実際に一番眠れるのはこの2ジャンル。音が単調に繰り返されるほど、脳がリラックスして入眠しやすくなります。</p>
+  <h3>✔ ストーリーが強すぎない</h3>
+  <p>「続きが気になる…」と思った瞬間に覚醒します。<strong>施術系・自然音系</strong>を選ぶのが正解です。</p>
+
+  <!-- ===== 比較表 ===== -->
+  <h2>【比較表】どれがいいか一瞬でわかる</h2>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>順位・作品名</th>
+        <th>癒し度</th>
+        <th>おすすめ度</th>
+        <th>こんな人に／一言</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🥇 耳かき専門店〜眠れない夜の施術〜</td>
+        <td>★★★★★</td>
+        <td>★★★★★</td>
+        <td>初めての人・即寝したい人。<strong>迷ったらこれ一択</strong></td>
+      </tr>
+      <tr>
+        <td>🥈 森の中の雨音〜自然音ASMR〜</td>
+        <td>★★★★★</td>
+        <td>★★★★★</td>
+        <td>声が苦手な人。<strong>毎晩かけっぱなし向き</strong></td>
+      </tr>
+      <tr>
+        <td>🥉 図書館司書さんのひみつの読み聞かせ</td>
+        <td>★★★★★</td>
+        <td>★★★★☆</td>
+        <td>頭が冴えて眠れない人。<strong>思考を止める特効薬</strong></td>
+      </tr>
+      <tr>
+        <td>4位 耳かき＆マッサージ 深夜の癒しサロン</td>
+        <td>★★★★★</td>
+        <td>★★★★☆</td>
+        <td>疲れた日に。<strong>途中で必ず眠れる長尺構成</strong></td>
+      </tr>
+      <tr>
+        <td>5位 幼なじみの添い寝ボイス〜夏休み〜</td>
+        <td>★★★★☆</td>
+        <td>★★★★☆</td>
+        <td>孤独な夜に。<strong>安心感で自然に眠れる</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p>👉 <strong>迷ったら上から順番に試せばOK。全部当たりです。</strong></p>
+
+  <!-- ===== おすすめ10選 ===== -->
+  <h2>本当に寝れるASMRおすすめ10選</h2>
+
+  <!-- ① -->
+  <div class="work-card">
+    <h3><span class="rank-medal">🥇</span>1位 耳かき専門店〜眠れない夜の施術〜 <span class="badge-urgent">人気No.1</span></h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：<span class="ero">★☆☆☆☆</span></span>
+    </div>
+    <p>「気づいたら朝だった」「記憶が飛んだレベルで眠れた」という声が続出している、<strong>睡眠特化ASMRの王者</strong>。やわらかい囁き声と丁寧な耳かき音が絶妙なテンポで続き、気がついたら意識がなくなっています。ASMR初体験の人にも、何度試しても眠れない人にも、迷わずすすめられる1本。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>ASMR初めてで何から試せばいいかわからない</li>
+        <li>とにかく今夜中に眠りたい</li>
+        <li>耳かき系が好き・興味ある</li>
+      </ul>
+    </div>
+    <p class="cta-lead">まずはこれを試してください。後悔しない選択です。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 今夜中に眠れる作品はこちら・無料試聴あり</span>
+    </a>
+    <p class="btn-sub">※人気作品につき早めのチェック推奨</p>
+  </div>
+
+  <!-- ② -->
+  <div class="work-card">
+    <h3><span class="rank-medal">🥈</span>2位 森の中の雨音〜自然音ASMR〜</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：なし（全年齢）</span>
+    </div>
+    <p>「声を聴くと逆に目が覚める」タイプの人に刺さる、<strong>声ゼロ・BGMゼロの純粋自然音</strong>。森の中に降り注ぐ雨の音だけが続く、シンプルすぎるほどシンプルな構成が眠りへの最短ルートです。毎晩リピートしても飽きない、睡眠BGMの定番。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>声や演技が入ると気になって眠れない</li>
+        <li>毎晩かけっぱなしにしたい</li>
+        <li>自然の音だけでリラックスしたい</li>
+      </ul>
+    </div>
+    <p class="cta-lead">迷ったらこれでOK。声なし派の人はまずこれを試してください。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 声なしで静かに眠りたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ③ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">🥉</span>3位 図書館司書さんのひみつの読み聞かせ</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：なし（全年齢）</span>
+    </div>
+    <p>静かな図書館で、司書さんがそっと小声で読み聞かせてくれる作品。子どもの頃に親に絵本を読んでもらった、あの安心感をもう一度。<strong>聴いていると思考がゆっくり止まっていき、気づいたら眠れています。</strong></p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>頭が冴えてなかなか眠れない</li>
+        <li>安心感・懐かしさで眠りたい</li>
+        <li>シチュエーション系・刺激系が苦手</li>
+      </ul>
+    </div>
+    <p class="cta-lead">まずはこれを試してください。頭が静かになります。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 頭が冴えて眠れない人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ④ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">🏅</span>4位 耳かき＆マッサージ 深夜の癒しサロン</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：<span class="ero">★★☆☆☆</span></span>
+    </div>
+    <p>耳かきから始まり、首・肩のマッサージまで続く<strong>フルコース施術ASMR</strong>。長尺構成なので「最後まで聴こう」と思っても、たいていの人は途中で眠ってしまいます。「終わりを聴いたことがない」という声が多数。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>今日は特に疲れた・体がバキバキ</li>
+        <li>長時間かけっぱなしにしたい</li>
+        <li>耳かきだけでは物足りないと感じる</li>
+      </ul>
+    </div>
+    <p class="cta-lead">迷ったらこれでOK。疲れた体ごとほぐされます。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 疲れた体を全身ほぐしたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ⑤ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">🏅</span>5位 幼なじみの添い寝ボイス〜夏休み〜</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★☆</span></span>
+      <span class="score-item">抜き度：<span class="ero">★★☆☆☆</span></span>
+    </div>
+    <p>誰かがそばにいてくれる安心感で眠れる添い寝シリーズ。<strong>恋愛的な緊張感より"安心感"が勝っているのが眠れる理由</strong>。孤独な夜の不安を自然に和らげてくれます。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>一人の夜が寂しくて眠れない</li>
+        <li>誰かの存在感で眠りたい</li>
+        <li>甘いけど刺激は抑えめが好み</li>
+      </ul>
+    </div>
+    <p class="cta-lead">まずはこれを試してください。孤独な夜に寄り添ってくれます。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 誰かの声で安心して眠りたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ===== 中間導線：ASMR Finder ===== -->
+  <div class="box-finder">
+    <p class="box-title">🔍 「もっと自分好みの作品を探したい」人へ</p>
+    <p>紹介した5作品以外にも、あなたにぴったりの作品が必ずあります。<br>タグ・癒し度・抜き度で絞り込める無料ツールを使えば<strong>10秒で当たり作品が見つかります。</strong></p>
+    <a href="https://asmr-finder.com" class="btn-finder" target="_blank" rel="noopener">ASMR Finderで今すぐ探す（無料）</a>
+    <p style="font-size:0.75rem; color:#666; margin-top:-8px;">タグ検索・癒し度フィルター・類似作品おすすめ機能つき</p>
+  </div>
+
+  <!-- ⑥ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">6️⃣</span>6位 深夜のヘッドスパ〜頭皮ほぐし施術〜</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：<span class="ero">★☆☆☆☆</span></span>
+    </div>
+    <p>「かけたら5分以内に寝落ちした」という口コミが絶えない頭皮マッサージ特化ASMR。頭部への刺激は副交感神経に直接働きかけるため、<strong>眠気を引き出す効率が高い</strong>と言われています。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>目や頭が疲れて眠れない</li>
+        <li>5分以内に寝落ちしたい</li>
+        <li>ヘッドスパ・美容院の感触が好き</li>
+      </ul>
+    </div>
+    <p class="cta-lead">迷ったらこれでOK。5分で寝落ちしたい人はこちら。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 5分で寝落ちしたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ⑦ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">7️⃣</span>7位 雨の窓辺で添い寝〜梅雨の夜〜</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：<span class="ero">★☆☆☆☆</span></span>
+    </div>
+    <p>雨音×添い寝ボイスの<strong>最強ハイブリッド</strong>。「声だけでは物足りない、でも自然音だけでは何か足りない」という人のためにあるような作品。雨音が声を程よくマスクしてくれる絶妙なバランスです。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>自然音と声の両方が欲しい</li>
+        <li>雨の音が好き・落ち着く</li>
+        <li>声が強すぎる作品が苦手</li>
+      </ul>
+    </div>
+    <p class="cta-lead">まずはこれを試してください。ちょうどいいバランスで眠れます。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 雨音と声で穏やかに眠りたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ⑧ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">8️⃣</span>8位 お姉さんの夜ごはんと添い寝</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★☆</span></span>
+      <span class="score-item">抜き度：<span class="ero">★☆☆☆☆</span></span>
+    </div>
+    <p>夕食後から寝かしつけまでの<strong>日常のひとコマ</strong>を丁寧に描いた作品。特別なイベントも緊張感もなく、ただ穏やかな時間が流れていく。その"何も起きない感"が逆に脳をオフにしてくれます。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>日常感・生活感のある声が好き</li>
+        <li>起伏のない穏やかな流れで眠りたい</li>
+        <li>お姉さんキャラ・世話焼き系が好き</li>
+      </ul>
+    </div>
+    <p class="cta-lead">迷ったらこれでOK。何も起きない夜が一番よく眠れます。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 日常の安心感でゆっくり眠りたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ⑨ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">9️⃣</span>9位 深夜の囁きラジオ〜あなただけの放送〜</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★☆</span></span>
+      <span class="score-item">抜き度：<span class="ero">★☆☆☆☆</span></span>
+    </div>
+    <p>深夜ラジオのフォーマットで、パーソナリティが静かに語りかけてくれる作品。<strong>「かけながら眠れる」設計</strong>になっているので、途中で眠っても問題ない構成。BGMとしてかけっぱなしに最適です。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>無音では眠れない・何かBGMが欲しい</li>
+        <li>深夜ラジオが好き・懐かしい</li>
+        <li>聴きながら自然に眠りに落ちたい</li>
+      </ul>
+    </div>
+    <p class="cta-lead">まずはこれを試してください。かけっぱなしで眠れます。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ BGMとして流しながら眠りたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <!-- ⑩ -->
+  <div class="work-card">
+    <h3><span class="rank-medal">🔟</span>10位 星空の下の耳かき〜夏の野外施術〜</h3>
+    <div class="score-row">
+      <span class="score-item">癒し度：<span class="heal">★★★★★</span></span>
+      <span class="score-item">抜き度：<span class="ero">★☆☆☆☆</span></span>
+    </div>
+    <p>虫の声・風・葉擦れの音をバックに、屋外で耳かきを受ける体験型ASMR。自然音と施術音が重なることで<strong>脳内に鮮明な夏の夜のイメージが広がり</strong>、日中の緊張がほぐれていきます。</p>
+    <div class="recommend-list">
+      <p>📌 こんな人におすすめ</p>
+      <ul>
+        <li>夏の夜・虫の声・野外の雰囲気が好き</li>
+        <li>耳かきに自然音をプラスしたい</li>
+        <li>旅先や屋外で休んでいる感覚を味わいたい</li>
+      </ul>
+    </div>
+    <p class="cta-lead">迷ったらこれでOK。夏の夜に記憶が飛ぶほど眠れます。</p>
+    <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+      <span class="btn-main">🎧 今すぐDLsiteで聴く</span>
+      <span class="btn-benefit-text">→ 自然音×耳かきで深く眠りたい人はこちら</span>
+    </a>
+    <p class="btn-sub">※DLsite商品ページへ移動します</p>
+  </div>
+
+  <hr />
+
+  <!-- ===== 末尾導線：ASMR Finder ===== -->
+  <h2>🔍 もっと自分に合うASMRを探したい人へ</h2>
+  <p>ここまで紹介したのはほんの一部です。</p>
+  <ul>
+    <li>👉「タグで細かく絞り込みたい」</li>
+    <li>👉「癒し度・抜き度で自分好みを探したい」</li>
+    <li>👉「この作品に似た作品を見つけたい」</li>
+  </ul>
+  <p>そんな人はこちら👇</p>
+  <div class="box-finder">
+    <p class="box-title">ASMR Finderでできること</p>
+    <ul style="text-align:left; margin-bottom:16px; font-size:0.88rem;">
+      <li>🏷️ <strong>タグ検索</strong>（耳かき・甘々・囁き・自然音など）</li>
+      <li>💚 <strong>癒し度・抜き度で絞り込み</strong>（今夜の気分で選べる）</li>
+      <li>🔎 <strong>複数キーワード検索</strong>（AND/OR対応）</li>
+      <li>✨ <strong>類似作品の自動おすすめ</strong>（芋づる式に発見）</li>
+    </ul>
+    <a href="https://asmr-finder.com" class="btn-finder" target="_blank" rel="noopener">ASMR Finderで今すぐ探す（無料）</a>
+    <p style="font-size:0.75rem; color:#666; margin-top:-4px;">👆 10秒で"当たり作品"が見つかります</p>
+  </div>
+
+  <!-- ===== まとめ ===== -->
+  <div class="box-summary">
+    <h2>まとめ</h2>
+    <ul>
+      <li>寝たいなら<strong>癒し度重視</strong>で選ぶ</li>
+      <li><strong>耳かき・囁き</strong>が最強ジャンル</li>
+      <li>迷ったら<strong>①番から順番</strong>に試せばOK</li>
+    </ul>
+    <p style="margin-top:14px; color:#ccc; font-size:0.9rem;">今夜から試して、朝まで眠れる夜を手に入れてください。</p>
+  </div>
+
+  <p class="cta-lead">👆 まずはこれを試してください。今夜から変わります。</p>
+  <a href="https://www.dlsite.com/" class="btn-benefit" target="_blank" rel="noopener">
+    <span class="btn-main">🎧 1位の作品を今すぐ試してみる</span>
+    <span class="btn-benefit-text">→ 今夜ぐっすり眠れる作品はこちら・無料試聴あり</span>
+  </a>
+  <p class="btn-sub">※DLsite商品ページへ移動します</p>
+
+  <p class="disclaimer">※本記事はアフィリエイトリンクを含みます。記事内のリンクからDLsite商品ページへ移動することがあります。掲載情報は執筆時点のものです。</p>
+
+</div>
+</body>
+</html>

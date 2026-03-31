@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASMR Finder – 癒しの作品を探そう</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =====================================================
+       CSS カスタムプロパティ（変数）
+       サイト全体の色・フォント・サイズをここで一元管理
+    ===================================================== */
+    :root {
+      --bg:        #0b0e13;       /* ページ背景（深い夜空色） */
+      --surface:   #13171f;       /* カード背景 */
+      --surface2:  #1c2130;       /* ホバー時のカード背景 */
+      --border:    rgba(120,150,200,0.12);
+      --accent:    #7eb8d4;       /* メインアクセント（ソフト水色） */
+      --accent2:   #c9a96e;       /* サブアクセント（琥珀） */
+      --text:      #d8e0ec;       /* 本文テキスト */
+      --muted:     #6b7a96;       /* 薄いテキスト */
+      --heal-col:  #5dc4a8;       /* 癒し度バー（緑） */
+      --ero-col:   #e8819a;       /* 抜き度バー（ピンク） */
+      --font-jp:   'Zen Kaku Gothic New', sans-serif;
+      --font-en:   'Cormorant Garamond', serif;
+      --radius:    12px;
+      --glow:      0 0 24px rgba(126,184,212,0.15);
+    }
+
+    /* =====================================================
+       リセット & ベーススタイル
+    ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-jp);
+      font-weight: 300;
+      line-height: 1.7;
+      min-height: 100vh;
+      /* 背景に微細なノイズテクスチャ */
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -20%, rgba(126,184,212,0.06) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: var(--font-jp); }
+
+    /* =====================================================
+       ヘッダー
+    ===================================================== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(16px, 4vw, 48px);
+      height: 64px;
+      background: rgba(11,14,19,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: var(--font-en);
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+    }
+    .logo span { color: var(--accent2); font-style: italic; }
+
+    nav { display: flex; gap: 24px; font-size: 0.82rem; color: var(--muted); }
+    nav a:hover { color: var(--accent); transition: color 0.2s; }
+
+    /* =====================================================
+       ヒーローセクション
+    ===================================================== */
+    .hero {
+      text-align: center;
+      padding: clamp(48px, 8vw, 96px) clamp(16px, 4vw, 48px) clamp(32px, 5vw, 56px);
+      position: relative;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-en);
+      font-style: italic;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      color: var(--accent2);
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.1s forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.2s forwards;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+      position: relative;
+    }
+
+    .hero-sub {
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      color: var(--muted);
+      margin-bottom: 36px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.3s forwards;
+    }
+
+    /* =====================================================
+       検索ボックス
+    ===================================================== */
+    .search-wrap {
+      max-width: 600px;
+      margin: 0 auto 24px;
+      position: relative;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.4s forwards;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 14px 56px 14px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      color: var(--text);
+      font-family: var(--font-jp);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .search-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 1.1rem;
+    }
+
+    /* =====================================================
+       入力中キーワードのバッジ表示エリア
+       「耳かき」「甘々」のように分割されたワードをタグで見せる
+    ===================================================== */
+    .keyword-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      min-height: 24px;          /* ゼロ件でも高さを確保してガタつき防止 */
+      max-width: 600px;
+      margin: -12px auto 16px;   /* 検索ボックスと近づける */
+    }
+    /* 個々のキーワードバッジ */
+    .kw-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: rgba(201,169,110,0.12);   /* accent2 の薄い背景 */
+      border: 1px solid rgba(201,169,110,0.35);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      color: var(--accent2);
+      letter-spacing: 0.04em;
+      animation: fadeUp 0.2s ease forwards;
+    }
+    /* バッジ内の「×」ボタン */
+    .kw-badge-remove {
+      background: none;
+      border: none;
+      color: var(--accent2);
+      font-size: 0.85rem;
+      line-height: 1;
+      padding: 0 0 0 2px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+    }
+    .kw-badge-remove:hover { opacity: 1; }
+
+    /* 検索モード説明ラベル（AND / OR 切り替え） */
+    .search-mode-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.45s forwards;
+    }
+    .mode-label { letter-spacing: 0.04em; }
+    /* トグルスイッチ */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 22px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 14px;
+      height: 14px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: rgba(126,184,212,0.25); border-color: var(--accent); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(22px); background: var(--accent); }
+    .mode-active { color: var(--accent); font-weight: 700; }
+
+    /* =====================================================
+       スケルトンローディング
+       JSONを fetch している間、カードの枠だけ薄く光らせる
+    ===================================================== */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .card.skeleton {
+      /* アニメーションを上書きして通常表示に */
+      opacity: 1;
+      animation: none;
+      pointer-events: none;
+      min-height: 320px;
+      background: linear-gradient(
+        90deg,
+        var(--surface) 25%,
+        var(--surface2) 50%,
+        var(--surface) 75%
+      );
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+
+    /* =====================================================
+       タグフィルター
+    ===================================================== */
+    .tag-filter {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: 700px;
+      margin: 0 auto;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.5s forwards;
+    }
+
+    .tag-btn {
+      padding: 5px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      transition: all 0.18s;
+    }
+    .tag-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .tag-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    /* =====================================================
+       メインコンテンツ
+    ===================================================== */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 48px) 80px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .result-count {
+      font-family: var(--font-en);
+      font-size: 0.85rem;
+      color: var(--accent2);
+    }
+
+    /* 「見つかりません」表示 */
+    .no-results {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--muted);
+      display: none;
+    }
+    .no-results.show { display: block; }
+
+    /* =====================================================
+       作品カードグリッド
+    ===================================================== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    /* 作品カード */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      cursor: pointer;
+      opacity: 0;
+      animation: cardIn 0.5s ease forwards;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4), var(--glow);
+      border-color: rgba(126,184,212,0.3);
+    }
+
+    /* カード内のサムネイル（④ 画像サイズ完全統一） */
+    .card-thumb,
+    .card-thumb-placeholder {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+      background: var(--surface2);
+      /* はみ出し防止 */
+      flex-shrink: 0;
+    }
+
+    /* ⑥ カード本文：余白・間隔を調整して読みやすく */
+    .card-body {
+      padding: 12px 14px 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .card-tag {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      background: rgba(126,184,212,0.08);
+      border: 1px solid rgba(126,184,212,0.15);
+      border-radius: 10px;
+      color: var(--accent);
+      letter-spacing: 0.03em;
+      /* ③ タグをクリック可能に */
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .card-tag:hover {
+      background: rgba(126,184,212,0.2);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    /* アクティブ（検索中）タグの強調 */
+    .card-tag.tag-active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--text);
+      /* 3行で省略 */
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-desc {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+      /* 2行で省略 */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* =====================================================
+       ★ スター評価
+    ===================================================== */
+    .score-bars { display: flex; flex-direction: column; gap: 4px; }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 「癒し度」「抜き度」ラベル */
+    .score-label {
+      font-size: 0.67rem;
+      color: var(--muted);
+      width: 38px;
+      flex-shrink: 0;
+    }
+
+    /* ★5つを並べるコンテナ */
+    .stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    /* ★1個 */
+    .star {
+      font-size: 0.82rem;
+      line-height: 1;
+      /* デフォルトは空き星（薄いグレー） */
+      color: rgba(255,255,255,0.12);
+      transition: color 0.2s;
+    }
+
+    /* 塗り★の色：種類ごとに変える */
+    .star.filled.heal { color: var(--heal-col); }   /* 癒し度 → 緑 */
+    .star.filled.ero  { color: var(--ero-col);  }   /* 抜き度 → ピンク */
+
+    /* =====================================================
+       CTAボタン（ベネフィット型・2段構成）
+       上段：アクション  下段：得られる結果
+    ===================================================== */
+    .card-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-align: center;
+      padding: 10px 12px 9px;
+      background: linear-gradient(135deg, var(--accent) 0%, #5a9db8 100%);
+      border: none;
+      border-radius: 10px;
+      color: var(--bg);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+      margin-top: 6px;
+      box-shadow: 0 3px 12px rgba(126,184,212,0.25);
+      text-decoration: none;
+    }
+    .card-btn:hover {
+      opacity: 0.92;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(126,184,212,0.4);
+      color: var(--bg);
+    }
+    /* ボタン上段：「🎧 今すぐDLsiteで聴く」 */
+    .card-btn-main {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    /* ボタン下段：ベネフィット文言 */
+    .card-btn-benefit {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 400;
+      opacity: 0.82;
+      letter-spacing: 0.02em;
+    }
+    /* CTA直前の一言（背中を押すコピー） */
+    .card-cta-lead {
+      font-size: 0.72rem;
+      color: var(--accent2);
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-top: 2px;
+    }
+
+    /* =====================================================
+       ③ ソート切り替えボタン
+    ===================================================== */
+    .sort-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;  /* section-header 内で右端に寄せる */
+    }
+    .sort-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .sort-btn {
+      padding: 4px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-family: var(--font-jp);
+      letter-spacing: 0.04em;
+      transition: all 0.18s;
+    }
+    .sort-btn:hover  { border-color: var(--accent); color: var(--accent); }
+    .sort-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    /* =====================================================
+       ② カード一覧のランキングメダル（上位3件）
+    ===================================================== */
+    /* カードを position:relative にしてバッジを絶対配置 */
+    .card { position: relative; }
+
+    .card-rank-medal {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+      font-size: 1.4rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      pointer-events: none; /* ホバー・クリックを素通りさせる */
+    }
+
+    /* =====================================================
+       フッター
+    ===================================================== */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px clamp(16px, 4vw, 48px);
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent); }
+    footer a:hover { text-decoration: underline; }
+
+    /* =====================================================
+       アニメーション
+    ===================================================== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* カードの表示遅延（順番に表示） */
+    .card:nth-child(1)  { animation-delay: 0.05s; }
+    .card:nth-child(2)  { animation-delay: 0.10s; }
+    .card:nth-child(3)  { animation-delay: 0.15s; }
+    .card:nth-child(4)  { animation-delay: 0.20s; }
+    .card:nth-child(5)  { animation-delay: 0.25s; }
+    .card:nth-child(6)  { animation-delay: 0.30s; }
+    .card:nth-child(7)  { animation-delay: 0.35s; }
+    .card:nth-child(8)  { animation-delay: 0.40s; }
+
+    /* =====================================================
+       ランキングセクション
+    ===================================================== */
+
+    .ranking-section {
+      max-width: 1200px;
+      margin: 0 auto 56px;
+      padding: 0 clamp(16px, 4vw, 48px);
+    }
+    .ranking-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .ranking-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .ranking-badge {
+      font-size: 0.7rem;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .ranking-badge.total {
+      background: rgba(201,169,110,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(201,169,110,0.3);
+    }
+
+    /* 5列→スマホは2列 */
+    .ranking-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) { .ranking-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .ranking-grid { grid-template-columns: 1fr; } }
+
+    /* ランキングカード */
+    .rank-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      opacity: 0;
+      animation: cardIn 0.45s ease forwards;
+    }
+    .rank-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4), var(--glow);
+      border-color: rgba(126,184,212,0.3);
+    }
+
+    /* 順位バッジ（左上に絶対配置） */
+    .rank-badge {
+      position: absolute;
+      top: 8px; left: 8px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-en);
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 1;
+    }
+    .rank-badge.rank-1     { background: #c9a96e; color: #0b0e13; }   /* 金 */
+    .rank-badge.rank-2     { background: #9eaab8; color: #0b0e13; }   /* 銀 */
+    .rank-badge.rank-3     { background: #a0714f; color: #fff;    }   /* 銅 */
+    .rank-badge.rank-other { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    .rank-card .card-thumb,
+    .rank-card .card-thumb-placeholder {
+      width: 100%; aspect-ratio: 3/4; object-fit: cover;
+      display: block; background: var(--surface2);
+    }
+    .rank-card .card-body {
+      padding: 10px 12px 12px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .rank-card .card-title { font-size: 0.82rem; font-weight: 700; line-height: 1.4; }
+
+    /* 合計スコア */
+    .rank-total-score {
+      font-family: var(--font-en);
+      font-size: 0.78rem;
+      color: var(--accent2);
+    }
+
+    /* 小さいスコアバー */
+    .rank-score-bars  { display: flex; flex-direction: column; gap: 3px; }
+    .rank-score-row   { display: flex; align-items: center; gap: 5px; }
+    .rank-score-label { font-size: 0.6rem; color: var(--muted); width: 34px; flex-shrink: 0; }
+    .rank-score-track { flex: 1; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+    .rank-score-fill  { height: 100%; border-radius: 2px; }
+    .rank-score-fill.heal { background: var(--heal-col); }
+    .rank-score-fill.ero  { background: var(--ero-col);  }
+
+    .rank-card:nth-child(1) { animation-delay: 0.05s; }
+    .rank-card:nth-child(2) { animation-delay: 0.10s; }
+    .rank-card:nth-child(3) { animation-delay: 0.15s; }
+    .rank-card:nth-child(4) { animation-delay: 0.20s; }
+    .rank-card:nth-child(5) { animation-delay: 0.25s; }
+
+    /* =====================================================
+       レスポンシブ
+    ===================================================== */
+    @media (max-width: 480px) {
+      .card-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== ヘッダー ===== -->
+  <header>
+    <div class="logo">ASMR <span>Finder</span></div>
+    <nav>
+      <a href="#">トップ</a>
+      <a href="#">ランキング</a>
+      <a href="#">新着</a>
+    </nav>
+  </header>
+
+  <!-- ===== ヒーローセクション ===== -->
+  <section class="hero">
+    <p class="hero-eyebrow">DLsite ASMR Search Tool</p>
+    <h1>耳に届く、<em>最高の癒し</em>を。</h1>
+    <p class="hero-sub">タイトル・タグで検索して、あなたにぴったりのASMR作品を見つけよう</p>
+
+    <!-- 検索ボックス -->
+    <div class="search-wrap">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="スペース区切りで複数検索（例：耳かき 甘々）"
+        autocomplete="off"
+      />
+      <span class="search-icon">🔍</span>
+    </div>
+
+    <!-- キーワードバッジ表示エリア（スペース区切りで分割されたワードを表示） -->
+    <div class="keyword-badges" id="keywordBadges"></div>
+
+    <!-- AND / OR 検索モード切り替え -->
+    <div class="search-mode-wrap">
+      <span class="mode-label" id="labelAnd" class="mode-active">AND（全て含む）</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="modeToggle" />
+        <span class="toggle-track"></span>
+      </label>
+      <span class="mode-label" id="labelOr">OR（どれか含む）</span>
+    </div>
+
+    <!-- タグフィルター -->
+    <div class="tag-filter" id="tagFilter">
+      <!-- タグはJSで動的に生成されます -->
+    </div>
+  </section>
+
+  <!-- ===== 総合ランキング（JSで動的に生成） ===== -->
+  <section class="ranking-section" id="rankingSection">
+    <div class="ranking-header">
+      <span class="ranking-title">Ranking</span>
+      <span class="ranking-badge total">総合</span>
+    </div>
+    <!-- カードはJSで生成して挿入する -->
+    <div class="ranking-grid" id="rankingGrid"></div>
+  </section>
+
+  <!-- ===== メインコンテンツ ===== -->
+  <main>
+    <div class="section-header">
+      <span class="section-title">作品一覧</span>
+      <span class="result-count" id="resultCount"></span>
+      <!-- ③ ソート切り替えボタン -->
+      <div class="sort-wrap">
+        <span class="sort-label">並び順</span>
+        <button class="sort-btn active" data-sort="recommend" id="sortRecommend">おすすめ順</button>
+        <button class="sort-btn"        data-sort="newest"    id="sortNewest">新着順</button>
+      </div>
+    </div>
+
+    <p class="no-results" id="noResults">該当する作品が見つかりませんでした。</p>
+
+    <!-- 作品カード一覧（JSで動的生成） -->
+    <div class="card-grid" id="cardGrid"></div>
+  </main>
+
+  <!-- ===== フッター ===== -->
+  <footer>
+    <p>
+      当サイトはDLsiteのアフィリエイトプログラムに参加しています。<br/>
+      作品リンクをクリックするとDLsite商品ページへ移動します。
+    </p>
+    <p style="margin-top:8px">© 2025 ASMR Finder</p>
+  </footer>
+
+
+  <!-- =====================================================
+       JavaScript
+       ※ 後から別ファイル（app.js）に分割できます
+  ===================================================== -->
+  <script>
+    // =====================================================
+    //  アプリ全体の設計図
+    //
+    //  【処理の順番】
+    //  init()
+    //   └─ ① works.json を fetch（await で完了まで待つ）
+    //   └─ ② works 配列にデータが入る
+    //   └─ ③ buildTagButtons()  タグボタンを生成
+    //   └─ ④ setupSearch()      検索イベントを登録
+    //   └─ ⑤ renderCards()      カードを初回描画
+    //
+    //  以後はユーザー操作のたびに renderCards() が呼ばれる
+    // =====================================================
+
+
+    // ==============================================
+    // 1. 作品データ
+    //    fetch完了後に入る。それまでは空配列
+    // ==============================================
+    let works = [];
+
+
+    // ==============================================
+    // 2. DOM参照をまとめて宣言
+    //    ※ページ読み込み時点で存在する要素のみここで取得
+    // ==============================================
+    const tagFilterEl  = document.getElementById("tagFilter");
+    const searchInput  = document.getElementById("searchInput");
+    const modeToggle   = document.getElementById("modeToggle");
+    const labelAnd     = document.getElementById("labelAnd");
+    const labelOr      = document.getElementById("labelOr");
+    const badgesEl     = document.getElementById("keywordBadges");
+    const gridEl       = document.getElementById("cardGrid");
+    const noResultsEl  = document.getElementById("noResults");
+    const resultCountEl = document.getElementById("resultCount");
+
+    // 現在選択中のタグ（null = すべて表示）
+    let activeTag = null;
+
+    // ③ 現在のソート順（"recommend" = おすすめ順 / "newest" = 新着順）
+    let currentSort = "recommend";
+
+    // ③ ソートボタンの DOM 参照
+    const sortRecommendBtn = document.getElementById("sortRecommend");
+    const sortNewestBtn    = document.getElementById("sortNewest");
+
+
+    // ==============================================
+    // 3. キーワード取得・バッジ・モードラベル
+    //    ─ 検索UIの小さな部品たち ─
+    // ==============================================
+
+    // 入力欄の文字列をスペースで分割してキーワード配列にする
+    // 例: "耳かき　甘々" → ["耳かき", "甘々"]
+    function getKeywords() {
+      return searchInput.value
+        .trim()
+        .split(/[\s　]+/)       // 半角・全角スペース両対応
+        .filter(k => k !== ""); // 空文字を除去
+    }
+
+    // キーワードをバッジとして検索ボックスの下に表示する
+    function renderBadges(keywords) {
+      badgesEl.innerHTML = "";
+      keywords.forEach(kw => {
+        const badge = document.createElement("span");
+        badge.className = "kw-badge";
+        badge.innerHTML = `${kw}<button class="kw-badge-remove" title="${kw}を削除">×</button>`;
+        // ×ボタンでそのワードだけ削除
+        badge.querySelector(".kw-badge-remove").addEventListener("click", () => {
+          searchInput.value = getKeywords().filter(k => k !== kw).join(" ");
+          renderBadges(getKeywords());
+          renderCards();
+        });
+        badgesEl.appendChild(badge);
+      });
+    }
+
+    // AND/OR ラベルのハイライトを切り替える
+    function updateModeLabel() {
+      const isOr = modeToggle.checked;
+      labelAnd.classList.toggle("mode-active", !isOr);
+      labelOr.classList.toggle("mode-active",   isOr);
+    }
+
+
+    // ==============================================
+    // 4. 絞り込み＆カード描画
+    //    works 配列を読んでフィルタリングする
+    //    ─ ここが「検索のコア」 ─
+    // ==============================================
+    function renderCards() {
+      const keywords = getKeywords();
+      const isOrMode = modeToggle.checked;
+
+      // 絞り込み
+      const filtered = works.filter(work => {
+        const tagMatch = activeTag ? work.tags.includes(activeTag) : true;
+        if (keywords.length === 0) return tagMatch;
+
+        const hits = (kw) => {
+          const q = kw.toLowerCase();
+          return (
+            work.title.toLowerCase().includes(q) ||
+            work.description.toLowerCase().includes(q) ||
+            work.tags.some(t => t.toLowerCase().includes(q))
+          );
+        };
+
+        const kwMatch = isOrMode
+          ? keywords.some(kw => hits(kw))
+          : keywords.every(kw => hits(kw));
+
+        return tagMatch && kwMatch;
+      });
+
+      // ① ソート
+      //    "recommend" → healing + ero の合計の高い順
+      //    "newest"    → createdAt の新しい順（文字列比較で降順）
+      const sorted = [...filtered].sort((a, b) => {
+        if (currentSort === "newest") {
+          // createdAt がない作品は末尾に
+          const da = a.createdAt ?? "";
+          const db = b.createdAt ?? "";
+          return db.localeCompare(da); // 新しい順（降順）
+        }
+        // デフォルト：おすすめ順（スコア合計の高い順）
+        const scoreA = (a.healing ?? 0) + (a.ero ?? 0);
+        const scoreB = (b.healing ?? 0) + (b.ero ?? 0);
+        return scoreB - scoreA;
+      });
+
+      // 件数表示
+      const modeLabel = keywords.length >= 2 ? `（${isOrMode ? "OR" : "AND"}検索）` : "";
+      resultCountEl.textContent = `${sorted.length} 件${modeLabel}`;
+
+      noResultsEl.classList.toggle("show", sorted.length === 0);
+
+      // ② カードを描画
+      //    おすすめ順のとき、上位3件にランクメダルを付ける
+      gridEl.innerHTML = "";
+      sorted.forEach((work, i) => {
+        // おすすめ順のとき上位3件だけメダルあり、新着順のときはメダルなし
+        const medal = (currentSort === "recommend" && i < 3)
+          ? ["🥇", "🥈", "🥉"][i]
+          : null;
+        gridEl.appendChild(createCard(work, i, medal));
+      });
+    }
+
+
+    // ==============================================
+    // 5. ★ を生成するヘルパー関数
+    //
+    // renderStars(4, "heal") → ★★★★☆（緑）
+    // renderStars(2, "ero")  → ★★☆☆☆（ピンク）
+    // ==============================================
+    function renderStars(score, type) {
+      return Array.from({ length: 5 }, (_, i) => {
+        const filled = i < score;
+        return `<span class="star ${filled ? `filled ${type}` : ""}">★</span>`;
+      }).join("");
+    }
+
+
+    // ==============================================
+    // ① ベネフィット文言を作品データから自動生成する関数
+    //
+    // healing・ero・tags の組み合わせで
+    // 「5分で寝落ちしたい人向け」などの
+    // クリックしたくなるコピーを返す
+    // ==============================================
+    function getBenefitText(work) {
+      const h = work.healing ?? 0;
+      const e = work.ero     ?? 0;
+      const tags = work.tags ?? [];
+
+      // タグに応じた文言（優先度順）
+      if (tags.includes("睡眠導入") || tags.includes("雨音") || tags.includes("自然音")) {
+        return "今夜ぐっすり眠りたい人向け";
+      }
+      if (tags.includes("耳かき") && h >= 4) {
+        return "5分で寝落ちしたい人はこちら";
+      }
+      if (tags.includes("添い寝") || tags.includes("幼なじみ")) {
+        return "誰かの声で安心したい人向け";
+      }
+      if (tags.includes("ヤンデレ") || tags.includes("ダーク系")) {
+        return "ドキドキしたい夜はこちら";
+      }
+      if (tags.includes("バイノーラル")) {
+        return "立体音響で没入したい人向け";
+      }
+      if (tags.includes("マッサージ")) {
+        return "疲れた体をほぐしたい人に";
+      }
+      if (tags.includes("読み聞かせ")) {
+        return "頭を空っぽにして眠りたい人に";
+      }
+      // スコアベースのフォールバック
+      if (h >= 5) return "今すぐ癒されたい人向け";
+      if (e >= 4) return "刺激を求めている人向け";
+      if (h >= 3) return "リラックスしたい夜に";
+      return "お気に入りの1本を見つけよう";
+    }
+
+    // ==============================================
+    // ⑤ CTA直前の一言を生成する関数
+    //    読者の背中を押す短いコピー
+    // ==============================================
+    function getCtaLead(work) {
+      const h = work.healing ?? 0;
+      const e = work.ero     ?? 0;
+      const tags = work.tags ?? [];
+
+      if (h === 5 && e <= 1)              return "💤 迷ったらこれ。睡眠特化の定番作品";
+      if (tags.includes("耳かき"))        return "👂 耳かき系で一番人気のジャンル";
+      if (tags.includes("添い寝"))        return "🌙 孤独な夜に寄り添ってくれます";
+      if (tags.includes("バイノーラル"))  return "🎧 イヤホンで聴くと効果が倍増";
+      if (tags.includes("自然音") || tags.includes("雨音")) return "🌧️ BGMとしてかけっぱなしにできる";
+      if (e >= 4)                         return "🔥 刺激重視の方におすすめ";
+      if (h >= 4)                         return "✨ まずはこれを試してみてください";
+      return "👉 詳細ページで試聴できます";
+    }
+
+    // ==============================================
+    // 6. カード要素を生成する関数
+    //    medal … "🥇"/"🥈"/"🥉" または null
+    // ==============================================
+    function createCard(work, index, medal = null) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.animationDelay = `${index * 0.05}s`;
+
+      // -----------------------------------------------
+      // カードクリック → detail.html へ遷移
+      //
+      // 【URLパラメータとは？】
+      // "detail.html?id=1" のように URL の末尾に "?キー=値" を付けて
+      // ページ間でデータを受け渡す仕組みです。
+      // detail.html 側では location.search からこの値を取り出します。
+      // -----------------------------------------------
+      card.addEventListener("click", (e) => {
+        // 「DLsiteで見る」ボタンのクリックは detail.html に飛ばさない
+        // （外部リンクなので、そのまま DLsite へ行かせる）
+        if (e.target.closest(".card-btn")) return;
+
+        // detail.html?id=1 の形でページ遷移
+        window.location.href = `detail.html?id=${work.id}`;
+      });
+
+      // imgが空のときはSVGのダミー画像を使う
+      // ─ data:image/svg+xml はURLエンコードしたSVGをそのままsrcに埋め込む方法
+      //   外部ファイル不要・ファイルが増えない・どこでも動く ─
+      const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
+
+      const thumbHtml = work.img
+        ? `<img class="card-thumb" src="${work.img}" alt="${work.title}" loading="lazy"
+             onerror="this.src='${DUMMY_SRC}'">`
+        : `<img class="card-thumb-placeholder" src="${DUMMY_SRC}" alt="No image">`;
+
+      // ★ 表示を生成（renderStars 関数を使う）
+      const healStars = renderStars(work.healing, "heal");
+      const eroStars  = renderStars(work.ero,     "ero");
+
+      // ① ベネフィット文言と ⑤ CTA一言を生成
+      const benefitText = getBenefitText(work);
+      const ctaLead     = getCtaLead(work);
+
+      // ③ タグHTMLを生成（クリックで検索できるように data-tag 属性を付与）
+      const tagsHtml = work.tags.map(t => {
+        const isActive = t === activeTag;
+        return `<span class="card-tag${isActive ? ' tag-active' : ''}" data-tag="${t}">${t}</span>`;
+      }).join("");
+
+      card.innerHTML = `
+        ${thumbHtml}
+        ${medal ? `<span class="card-rank-medal">${medal}</span>` : ""}
+        <div class="card-body">
+          <div class="card-tags">${tagsHtml}</div>
+          <p class="card-title">${work.title}</p>
+          <p class="card-desc">${work.description}</p>
+          <div class="score-bars">
+            <div class="score-row">
+              <span class="score-label">癒し度</span>
+              <div class="stars">${healStars}</div>
+            </div>
+            <div class="score-row">
+              <span class="score-label">抜き度</span>
+              <div class="stars">${eroStars}</div>
+            </div>
+          </div>
+          <p class="card-cta-lead">${ctaLead}</p>
+          <a class="card-btn" href="${work.url}" target="_blank" rel="noopener noreferrer">
+            <span class="card-btn-main">🎧 今すぐDLsiteで聴く</span>
+            <span class="card-btn-benefit">→ ${benefitText}</span>
+          </a>
+        </div>
+      `;
+
+      // ③ タグクリックで検索絞り込み
+      card.querySelectorAll(".card-tag").forEach(tagEl => {
+        tagEl.addEventListener("click", (e) => {
+          // カードへの遷移イベントより先に処理
+          e.stopPropagation();
+          const tag = tagEl.dataset.tag;
+
+          if (activeTag === tag) {
+            // 同じタグを再クリック → 解除
+            activeTag = null;
+            tagFilterEl.querySelectorAll(".tag-btn")
+              .forEach(b => b.classList.remove("active"));
+            tagFilterEl.querySelector(".tag-btn")?.classList.add("active"); // 「すべて」を選択
+          } else {
+            // 別のタグをクリック → そのタグで絞り込み
+            activeTag = tag;
+            // ヘッダーのタグボタンも連動して更新
+            tagFilterEl.querySelectorAll(".tag-btn").forEach(b => {
+              b.classList.toggle("active", b.textContent === tag);
+            });
+          }
+          renderCards();
+        });
+      });
+
+      return card;
+    }
+
+    // ==============================================
+    // ランキング機能
+    // ==============================================
+
+    // ----------------------------------------------
+    // 【getRanking】ランキング配列を作る関数
+    //
+    // 引数：
+    //   works   … 全作品配列（works.json の中身）
+    //   sortKey … 並べ替えの基準
+    //              "total"   → healing + ero の合計
+    //              "healing" → healing のみ
+    //              "ero"     → ero のみ
+    //   limit   … 取得件数（デフォルト5）
+    // ----------------------------------------------
+    function getRanking(works, sortKey = "total", limit = 5) {
+      return works
+        .map(work => {
+          // sortKey に応じてランキングスコアを計算
+          let score;
+          if (sortKey === "total") {
+            score = work.healing + work.ero; // 合計（最大10）
+          } else if (sortKey === "healing") {
+            score = work.healing;
+          } else if (sortKey === "ero") {
+            score = work.ero;
+          } else {
+            score = 0;
+          }
+          return { work, score };
+        })
+        .sort((a, b) => b.score - a.score) // 高い順（降順）
+        .slice(0, limit);                  // 上位 limit 件
+    }
+
+    // ----------------------------------------------
+    // 【createRankCard】ランキングカード1枚を生成する関数
+    // ----------------------------------------------
+    function createRankCard(work, rank, totalScore) {
+      const card = document.createElement("div");
+      card.className = "rank-card";
+
+      const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
+
+      const thumbHtml = work.img
+        ? `<img class="card-thumb" src="${work.img}" alt="${work.title}" loading="lazy"
+             onerror="this.src='${DUMMY_SRC}'">`
+        : `<img class="card-thumb-placeholder" src="${DUMMY_SRC}" alt="No image">`;
+
+      // 1〜3位は金銀銅クラス、4位以降は rank-other
+      const badgeClass = rank <= 3 ? `rank-${rank}` : "rank-other";
+
+      const healPct = (work.healing / 5) * 100;
+      const eroPct  = (work.ero     / 5) * 100;
+
+      card.innerHTML = `
+        ${thumbHtml}
+        <div class="rank-badge ${badgeClass}">${rank}</div>
+        <div class="card-body">
+          <p class="card-title">${work.title}</p>
+          <p class="rank-total-score">総合 ${totalScore} pt</p>
+          <div class="rank-score-bars">
+            <div class="rank-score-row">
+              <span class="rank-score-label">癒し度</span>
+              <div class="rank-score-track">
+                <div class="rank-score-fill heal" style="width:${healPct}%"></div>
+              </div>
+            </div>
+            <div class="rank-score-row">
+              <span class="rank-score-label">抜き度</span>
+              <div class="rank-score-track">
+                <div class="rank-score-fill ero" style="width:${eroPct}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => {
+        window.location.href = `detail.html?id=${work.id}`;
+      });
+
+      return card;
+    }
+
+    // ----------------------------------------------
+    // 【renderRanking】ランキングをDOMに描画する関数
+    // ----------------------------------------------
+    function renderRanking(works, sortKey, gridId) {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+
+      const ranked = getRanking(works, sortKey, 5);
+      grid.innerHTML = "";
+
+      // index は 0 始まりなので +1 して順位にする
+      ranked.forEach(({ work, score }, index) => {
+        grid.appendChild(createRankCard(work, index + 1, score));
+      });
+    }
+
+    // ==============================================
+    // 7. アプリ起動：JSONを読み込んでから全UIを初期化
+    // ==============================================
+
+    // ローディング中はスケルトンカードを表示
+    function showLoading() {
+      gridEl.innerHTML = `
+        <div class="card skeleton"></div>
+        <div class="card skeleton"></div>
+        <div class="card skeleton"></div>
+        <div class="card skeleton"></div>
+      `;
+      noResultsEl.classList.remove("show");
+    }
+
+    // works.json から全タグを集めてフィルターボタンを生成
+    function buildTagButtons() {
+      // Set で重複を除去してから配列化
+      const allTags = [...new Set(works.flatMap(w => w.tags))];
+      tagFilterEl.innerHTML = "";
+
+      // 「すべて」ボタン
+      const allBtn = document.createElement("button");
+      allBtn.className = "tag-btn active";
+      allBtn.textContent = "すべて";
+      allBtn.addEventListener("click", () => {
+        activeTag = null;
+        tagFilterEl.querySelectorAll(".tag-btn")
+          .forEach(b => b.classList.remove("active"));
+        allBtn.classList.add("active");
+        renderCards();
+      });
+      tagFilterEl.appendChild(allBtn);
+
+      // 各タグのボタン（works.json のタグから自動生成）
+      allTags.forEach(tag => {
+        const btn = document.createElement("button");
+        btn.className = "tag-btn";
+        btn.textContent = tag;
+        btn.addEventListener("click", () => {
+          activeTag = tag;
+          tagFilterEl.querySelectorAll(".tag-btn")
+            .forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderCards();
+        });
+        tagFilterEl.appendChild(btn);
+      });
+    }
+
+    // 検索イベントをまとめて登録
+    function setupSearch() {
+      searchInput.addEventListener("input", () => {
+        renderBadges(getKeywords());
+        renderCards();
+      });
+
+      modeToggle.addEventListener("change", () => {
+        updateModeLabel();
+        renderCards();
+      });
+
+      updateModeLabel();
+
+      // ③ ソートボタンのイベント登録
+      // クリックで currentSort を切り替えて再描画する
+      [sortRecommendBtn, sortNewestBtn].forEach(btn => {
+        btn.addEventListener("click", () => {
+          // active クラスを付け替え
+          [sortRecommendBtn, sortNewestBtn].forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          // currentSort を更新（data-sort 属性から取得）
+          currentSort = btn.dataset.sort;
+          renderCards();
+        });
+      });
+    }
+
+    // メイン：fetch → UI構築 の順番を保証する
+    async function init() {
+      showLoading(); // ① スケルトン表示
+
+      try {
+        // ② works.json を取得（await で完了を待つ）
+        const res = await fetch("works.json");
+        works = await res.json(); // ③ 配列として works に代入
+
+      } catch (err) {
+        console.error("works.json の読み込みに失敗しました:", err);
+        gridEl.innerHTML = "";
+        noResultsEl.textContent = "データの読み込みに失敗しました。works.json を確認してください。";
+        noResultsEl.classList.add("show");
+        return;
+      }
+
+      // ④ works にデータが入った後でUIを初期化
+      buildTagButtons(); // タグボタン（works.json のタグから生成）
+      setupSearch();     // 検索イベント登録（works が空でないことが保証された状態で）
+      renderRanking(works, "total", "rankingGrid"); // 総合ランキング
+      renderCards();     // 初回カード描画
+    }
+
+    init(); // 起動
+  </script>
+</body>
+</html>
