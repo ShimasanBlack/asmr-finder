@@ -1,12 +1,36 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-10ZKN9D1L2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASMR Finder – 癒しの作品を探そう</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet" />
+
+  <!-- =====================================================
+       ① Google Analytics 4（GA4）
+       ─ GA_MEASUREMENT_ID を自分のIDに差し替えてください ─
+       例: G-XXXXXXXXXX
+       取得方法: GA管理画面 → データストリーム → 測定ID
+  ===================================================== -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'GA_MEASUREMENT_ID');
+  </script>
+  <!-- ===================================================== -->
 
   <style>
     /* =====================================================
@@ -743,6 +767,330 @@
     .rank-card:nth-child(5) { animation-delay: 0.25s; }
 
     /* =====================================================
+       ① お気に入りボタン
+    ===================================================== */
+    .fav-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 3;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(11,14,19,0.65);
+      backdrop-filter: blur(4px);
+      color: rgba(255,255,255,0.35);
+      font-size: 1rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .fav-btn:hover   { background: rgba(232,129,154,0.25); color: var(--ero-col); transform: scale(1.1); }
+    .fav-btn.active  { color: var(--ero-col); background: rgba(232,129,154,0.2); }
+
+    /* ヘッダーのお気に入りフィルターボタン */
+    .fav-filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: var(--font-jp);
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .fav-filter-btn:hover { border-color: var(--ero-col); color: var(--ero-col); }
+    .fav-filter-btn.active {
+      background: rgba(232,129,154,0.15);
+      border-color: var(--ero-col);
+      color: var(--ero-col);
+      font-weight: 700;
+    }
+    /* バッジ（件数表示） */
+    .fav-count-badge {
+      background: var(--ero-col);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 6px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    /* =====================================================
+       ② 「迷ったらこれ」ピックアップセクション
+    ===================================================== */
+    .pickup-section {
+      max-width: 1200px;
+      margin: 0 auto 40px;
+      padding: 0 clamp(16px, 4vw, 48px);
+    }
+
+    .pickup-card {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid rgba(201,169,110,0.35);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(201,169,110,0.1), 0 8px 32px rgba(0,0,0,0.3);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.22s, box-shadow 0.22s;
+    }
+    .pickup-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 0 1px rgba(201,169,110,0.3), 0 16px 48px rgba(0,0,0,0.4);
+    }
+
+    /* 左：サムネイル */
+    .pickup-thumb {
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+      object-fit: cover;
+      display: block;
+      background: var(--surface2);
+    }
+
+    /* 右：情報エリア */
+    .pickup-body {
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* 「迷ったらこれ」ラベル */
+    .pickup-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent2);
+      background: rgba(201,169,110,0.12);
+      border: 1px solid rgba(201,169,110,0.3);
+      border-radius: 20px;
+      padding: 3px 12px;
+      width: fit-content;
+    }
+
+    .pickup-title {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    .pickup-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.65;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .pickup-scores {
+      display: flex;
+      gap: 16px;
+    }
+    .pickup-score-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+    }
+    .pickup-score-label { color: var(--muted); }
+    .pickup-score-stars { letter-spacing: -1px; }
+
+    /* ピックアップCTAボタン */
+    .pickup-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 13px 20px 11px;
+      background: linear-gradient(135deg, var(--accent2) 0%, #b8893e 100%);
+      border: none;
+      border-radius: 10px;
+      color: #0b0e13;
+      font-size: 0.9rem;
+      font-weight: 800;
+      font-family: var(--font-jp);
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.18s, transform 0.18s;
+      box-shadow: 0 4px 16px rgba(201,169,110,0.35);
+      width: fit-content;
+    }
+    .pickup-btn:hover { opacity: 0.9; transform: translateY(-2px); color: #0b0e13; }
+    .pickup-btn-sub { font-size: 0.7rem; font-weight: 400; opacity: 0.8; }
+
+    /* スマホ：縦積みレイアウト */
+    @media (max-width: 600px) {
+      .pickup-card { grid-template-columns: 1fr; }
+      .pickup-thumb { min-height: 200px; max-height: 220px; width: 100%; }
+      .pickup-body  { padding: 18px 18px 20px; }
+    }
+
+    /* =====================================================
+       ④ 人気・急上昇バッジ
+    ===================================================== */
+    .work-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.04em;
+      line-height: 1.6;
+    }
+    .work-badge.hot  {
+      background: rgba(232,72,90,0.15);
+      color: #e8485a;
+      border: 1px solid rgba(232,72,90,0.3);
+    }
+    .work-badge.rise {
+      background: rgba(201,169,110,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(201,169,110,0.3);
+    }
+    .card-badges {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    /* =====================================================
+       ① クリック数バッジ（④ UIラベル）
+    ===================================================== */
+    /* カード右下に表示するクリック数インジケータ */
+    .click-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    /* 閾値を超えると色が変わる */
+    .click-indicator.warm { color: var(--accent2); }   /* 3回以上 */
+    .click-indicator.hot  { color: var(--ero-col);  }  /* 7回以上 */
+
+    /* 「よく見られています」ラベル（カード上部） */
+    .trending-label {
+      display: inline-block;
+      font-size: 0.63rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.04em;
+      background: rgba(93,196,168,0.12);
+      color: var(--heal-col);
+      border: 1px solid rgba(93,196,168,0.25);
+    }
+
+    /* =====================================================
+       ③ 最近見た作品セクション
+    ===================================================== */
+    .history-section {
+      max-width: 1200px;
+      margin: 0 auto 48px;
+      padding: 0 clamp(16px, 4vw, 48px);
+    }
+    .history-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .history-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    /* 「履歴を消す」リンク */
+    .history-clear {
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-jp);
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .history-clear:hover { color: var(--ero-col); }
+
+    /* 横スクロール対応の小型カードリスト */
+    .history-list {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      /* スクロールバーをほぼ非表示に */
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface2) transparent;
+    }
+    .history-list::-webkit-scrollbar { height: 4px; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+    /* 最近見た作品の小さいカード */
+    .history-card {
+      flex-shrink: 0;
+      width: 120px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.18s, border-color 0.18s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .history-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(126,184,212,0.3);
+    }
+    .history-card img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+      background: var(--surface2);
+    }
+    .history-card-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 6px 8px;
+      line-height: 1.35;
+      color: var(--text);
+      /* 2行で省略 */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* =====================================================
        レスポンシブ
     ===================================================== */
     @media (max-width: 480px) {
@@ -759,7 +1107,10 @@
     <nav>
       <a href="#">トップ</a>
       <a href="#">ランキング</a>
-      <a href="#">新着</a>
+      <!-- ① お気に入りフィルターボタン -->
+      <button class="fav-filter-btn" id="favFilterBtn">
+        ❤️ お気に入り <span class="fav-count-badge" id="favCountBadge">0</span>
+      </button>
     </nav>
   </header>
 
@@ -799,6 +1150,9 @@
     </div>
   </section>
 
+  <!-- ===== ② 「迷ったらこれ」ピックアップ（JSで動的に生成） ===== -->
+  <section class="pickup-section" id="pickupSection" style="display:none"></section>
+
   <!-- ===== 総合ランキング（JSで動的に生成） ===== -->
   <section class="ranking-section" id="rankingSection">
     <div class="ranking-header">
@@ -818,6 +1172,7 @@
       <div class="sort-wrap">
         <span class="sort-label">並び順</span>
         <button class="sort-btn active" data-sort="recommend" id="sortRecommend">おすすめ順</button>
+        <button class="sort-btn"        data-sort="popular"   id="sortPopular">🔥 人気順</button>
         <button class="sort-btn"        data-sort="newest"    id="sortNewest">新着順</button>
       </div>
     </div>
@@ -827,6 +1182,15 @@
     <!-- 作品カード一覧（JSで動的生成） -->
     <div class="card-grid" id="cardGrid"></div>
   </main>
+
+  <!-- ===== ③ 最近見た作品（JSで動的に生成） ===== -->
+  <section class="history-section" id="historySection" style="display:none">
+    <div class="history-header">
+      <span class="history-title">最近見た作品</span>
+      <button class="history-clear" id="historyClearBtn">履歴を消す</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </section>
 
   <!-- ===== フッター ===== -->
   <footer>
@@ -887,6 +1251,7 @@
 
     // ③ ソートボタンの DOM 参照
     const sortRecommendBtn = document.getElementById("sortRecommend");
+    const sortPopularBtn   = document.getElementById("sortPopular");
     const sortNewestBtn    = document.getElementById("sortNewest");
 
 
@@ -938,8 +1303,11 @@
       const keywords = getKeywords();
       const isOrMode = modeToggle.checked;
 
-      // 絞り込み
+      // 絞り込み（① お気に入りフィルター対応）
       const filtered = works.filter(work => {
+        // ① お気に入りフィルターONのときはお気に入りのみ表示
+        if (favFilterOn && !favIds.has(work.id)) return false;
+
         const tagMatch = activeTag ? work.tags.includes(activeTag) : true;
         if (keywords.length === 0) return tagMatch;
 
@@ -961,15 +1329,21 @@
 
       // ① ソート
       //    "recommend" → healing + ero の合計の高い順
-      //    "newest"    → createdAt の新しい順（文字列比較で降順）
+      //    "popular"   → クリック数の多い順（データ駆動）
+      //    "newest"    → createdAt の新しい順
       const sorted = [...filtered].sort((a, b) => {
+        if (currentSort === "popular") {
+          // ② クリック数の多い順（同数なら healing+ero で決定）
+          const diff = getClickCount(b.id) - getClickCount(a.id);
+          if (diff !== 0) return diff;
+          return ((b.healing ?? 0) + (b.ero ?? 0)) - ((a.healing ?? 0) + (a.ero ?? 0));
+        }
         if (currentSort === "newest") {
-          // createdAt がない作品は末尾に
           const da = a.createdAt ?? "";
           const db = b.createdAt ?? "";
-          return db.localeCompare(da); // 新しい順（降順）
+          return db.localeCompare(da);
         }
-        // デフォルト：おすすめ順（スコア合計の高い順）
+        // デフォルト：おすすめ順
         const scoreA = (a.healing ?? 0) + (a.ero ?? 0);
         const scoreB = (b.healing ?? 0) + (b.ero ?? 0);
         return scoreB - scoreA;
@@ -981,14 +1355,12 @@
 
       noResultsEl.classList.toggle("show", sorted.length === 0);
 
-      // ② カードを描画
-      //    おすすめ順のとき、上位3件にランクメダルを付ける
+      // カードを描画
+      // おすすめ順 or 人気順 のとき上位3件にメダルを付ける
       gridEl.innerHTML = "";
       sorted.forEach((work, i) => {
-        // おすすめ順のとき上位3件だけメダルあり、新着順のときはメダルなし
-        const medal = (currentSort === "recommend" && i < 3)
-          ? ["🥇", "🥈", "🥉"][i]
-          : null;
+        const showMedal = (currentSort === "recommend" || currentSort === "popular") && i < 3;
+        const medal = showMedal ? ["🥇", "🥈", "🥉"][i] : null;
         gridEl.appendChild(createCard(work, i, medal));
       });
     }
@@ -1086,12 +1458,15 @@
       // detail.html 側では location.search からこの値を取り出します。
       // -----------------------------------------------
       card.addEventListener("click", (e) => {
-        // 「DLsiteで見る」ボタンのクリックは detail.html に飛ばさない
-        // （外部リンクなので、そのまま DLsite へ行かせる）
         if (e.target.closest(".card-btn")) return;
-
-        // detail.html?id=1 の形でページ遷移
+        // ③ カードクリック → 閲覧履歴に追加してからページ遷移
+        addHistory(work.id);
         window.location.href = `detail.html?id=${work.id}`;
+      });
+
+      // ① DLsiteボタンクリック → trackClick でGA4・localStorage・consoleに記録
+      card.querySelector(".card-btn")?.addEventListener("click", () => {
+        trackClick(work.id, work.title, work.url);
       });
 
       // imgが空のときはSVGのダミー画像を使う
@@ -1121,7 +1496,13 @@
       card.innerHTML = `
         ${thumbHtml}
         ${medal ? `<span class="card-rank-medal">${medal}</span>` : ""}
+        <!-- ① お気に入りボタン -->
+        <button class="fav-btn ${favIds.has(work.id) ? 'active' : ''}"
+                aria-label="お気に入り">❤️</button>
         <div class="card-body">
+          <!-- ④ 人気バッジ・クリックラベル -->
+          ${getWorkBadgesHtml(work.id)}
+          ${getClickLabel(work.id)}
           <div class="card-tags">${tagsHtml}</div>
           <p class="card-title">${work.title}</p>
           <p class="card-desc">${work.description}</p>
@@ -1136,10 +1517,12 @@
             </div>
           </div>
           <p class="card-cta-lead">${ctaLead}</p>
-          <a class="card-btn" href="${work.url}" target="_blank" rel="noopener noreferrer">
+          <a class="card-btn" href="${work.url}" target="_blank" rel="noopener noreferrer"
+             data-work-id="${work.id}">
             <span class="card-btn-main">🎧 今すぐDLsiteで聴く</span>
             <span class="card-btn-benefit">→ ${benefitText}</span>
           </a>
+          ${getClickIndicatorHtml(work.id)}
         </div>
       `;
 
@@ -1166,6 +1549,14 @@
           }
           renderCards();
         });
+      });
+
+      // ① お気に入りボタンのクリックイベント
+      card.querySelector(".fav-btn")?.addEventListener("click", (e) => {
+        e.stopPropagation(); // カード遷移・タグと競合させない
+        toggleFav(work.id);
+        e.currentTarget.classList.toggle("active", favIds.has(work.id));
+        if (favFilterOn) renderCards(); // フィルター中なら即再描画
       });
 
       return card;
@@ -1273,6 +1664,310 @@
     }
 
     // ==============================================
+    // ① お気に入り機能
+    //    localStorage にIDのSetを保存・復元する
+    // ==============================================
+
+    // localStorage からお気に入りIDセットを読み込む
+    function loadFavs() {
+      try {
+        return new Set(JSON.parse(localStorage.getItem("asmr_favs") ?? "[]"));
+      } catch { return new Set(); }
+    }
+
+    // お気に入りIDセットを localStorage に保存する
+    function saveFavs(favSet) {
+      localStorage.setItem("asmr_favs", JSON.stringify([...favSet]));
+    }
+
+    // お気に入りセット（起動時に復元）
+    let favIds = loadFavs();
+
+    // ヘッダーのバッジ件数を更新する
+    function updateFavBadge() {
+      const badge = document.getElementById("favCountBadge");
+      if (badge) badge.textContent = favIds.size;
+    }
+
+    // IDのお気に入り状態をトグルする
+    function toggleFav(id) {
+      if (favIds.has(id)) {
+        favIds.delete(id);
+      } else {
+        favIds.add(id);
+      }
+      saveFavs(favIds);
+      updateFavBadge();
+    }
+
+    // お気に入りフィルターの ON/OFF 状態
+    let favFilterOn = false;
+
+    // ヘッダーのお気に入りボタンのイベントを登録（DOM生成後に呼ぶ）
+    function setupFavFilter() {
+      const btn = document.getElementById("favFilterBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        favFilterOn = !favFilterOn;
+        btn.classList.toggle("active", favFilterOn);
+        renderCards();
+      });
+      updateFavBadge(); // 起動時のバッジ更新
+    }
+
+    // ==============================================
+    // ② 「迷ったらこれ」ピックアップセクション
+    //    おすすめ順1位の作品を大きく表示する
+    // ==============================================
+    function renderPickup(worksList) {
+      const section = document.getElementById("pickupSection");
+      if (!section || worksList.length === 0) return;
+
+      // healing + ero の合計が最大の作品を1件選ぶ
+      const top = [...worksList].sort(
+        (a, b) => ((b.healing ?? 0) + (b.ero ?? 0)) - ((a.healing ?? 0) + (a.ero ?? 0))
+      )[0];
+
+      const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
+
+      const thumbSrc = top.img || DUMMY_SRC;
+      const healStars = Array.from({length: 5}, (_, i) =>
+        `<span style="color:${i < (top.healing ?? 0) ? 'var(--heal-col)' : 'rgba(255,255,255,0.1)'}">★</span>`
+      ).join("");
+      const eroStars = Array.from({length: 5}, (_, i) =>
+        `<span style="color:${i < (top.ero ?? 0) ? 'var(--ero-col)' : 'rgba(255,255,255,0.1)'}">★</span>`
+      ).join("");
+
+      section.innerHTML = `
+        <div class="pickup-card" id="pickupCard">
+          <img class="pickup-thumb" src="${thumbSrc}" alt="${top.title}"
+               onerror="this.src='${DUMMY_SRC}'">
+          <div class="pickup-body">
+            <span class="pickup-label">🔥 迷ったらこれ</span>
+            <p class="pickup-title">${top.title}</p>
+            <p class="pickup-desc">${top.description ?? ""}</p>
+            <div class="pickup-scores">
+              <div class="pickup-score-item">
+                <span class="pickup-score-label">癒し度</span>
+                <span class="pickup-score-stars">${healStars}</span>
+              </div>
+              <div class="pickup-score-item">
+                <span class="pickup-score-label">抜き度</span>
+                <span class="pickup-score-stars">${eroStars}</span>
+              </div>
+            </div>
+            <a class="pickup-btn" href="${top.url}" target="_blank" rel="noopener noreferrer">
+              🎧 今すぐDLsiteで聴く
+              <span class="pickup-btn-sub">→ ${getBenefitText(top)}</span>
+            </a>
+          </div>
+        </div>
+      `;
+
+      // カードクリックで詳細ページへ（ボタン以外）
+      document.getElementById("pickupCard")?.addEventListener("click", (e) => {
+        if (e.target.closest(".pickup-btn")) return;
+        window.location.href = `detail.html?id=${top.id}`;
+      });
+
+      section.style.display = "block";
+    }
+
+    // ==============================================
+    // ④ 作品バッジの定義
+    //    works.json の id と紐づけて「🔥人気」などを付与する
+    //    → id が決まったら実際のIDに差し替えてください
+    // ==============================================
+    const WORK_BADGES = {
+      // id: [{ type: "hot"|"rise", label: "表示テキスト" }]
+      1: [{ type: "hot",  label: "🔥 人気" }],
+      3: [{ type: "rise", label: "📈 急上昇" }],
+      4: [{ type: "hot",  label: "🔥 人気" }],
+      8: [{ type: "rise", label: "📈 急上昇" }],
+    };
+
+    // 指定された作品のバッジHTML文字列を返す
+    function getWorkBadgesHtml(workId) {
+      const badges = WORK_BADGES[workId];
+      if (!badges || badges.length === 0) return "";
+      const html = badges.map(b =>
+        `<span class="work-badge ${b.type}">${b.label}</span>`
+      ).join("");
+      return `<div class="card-badges">${html}</div>`;
+    }
+
+    // ==============================================
+    // ① クリックトラッキング
+    //    DLsite ボタンのクリック数を localStorage に保存
+    //    キー: "asmr_clicks" → { "1": 5, "2": 2, ... }
+    // ==============================================
+
+    // クリック数マップを読み込む（起動時に1回だけ実行）
+    function loadClicks() {
+      try {
+        return JSON.parse(localStorage.getItem("asmr_clicks") ?? "{}");
+      } catch { return {}; }
+    }
+
+    // クリック数マップを保存する
+    function saveClicks(map) {
+      localStorage.setItem("asmr_clicks", JSON.stringify(map));
+    }
+
+    // クリック数マップ（{ workId: count } の形）
+    let clickMap = loadClicks();
+
+    // ==============================================
+    // ② ③ trackClick：クリック計測の一元管理関数
+    //
+    //  ここを1箇所変えるだけで計測先を自由に追加・変更できる。
+    //
+    //  現在の送信先：
+    //    A) localStorage（既存のクリック数トラッキング）
+    //    B) Google Analytics 4（gtag イベント）
+    //    C) console.log（デバッグ・動作確認用）
+    //
+    //  将来の拡張例：
+    //    D) 自前サーバーへの送信  → fetch('/api/track', ...) を追加
+    //    E) Facebook Pixel       → fbq('track', ...) を追加
+    // ==============================================
+    function trackClick(workId, workTitle, workUrl) {
+      // ── A) localStorage にクリック数を保存 ────────────
+      clickMap[workId] = (clickMap[workId] ?? 0) + 1;
+      saveClicks(clickMap);
+
+      // ── B) GA4 にカスタムイベントを送信 ──────────────
+      // GA_MEASUREMENT_ID が設定されていれば自動で送信される。
+      // GA管理画面の「イベント」タブで "dlsite_click" として確認できる。
+      if (typeof gtag === "function") {
+        gtag("event", "dlsite_click", {
+          work_id:    workId,              // 作品ID
+          work_title: workTitle ?? "",     // 作品タイトル
+          work_url:   workUrl   ?? "",     // DLsiteのURL
+          click_count: clickMap[workId],   // 累計クリック数
+        });
+      }
+
+      // ── C) console.log（開発・確認用） ────────────────
+      // 本番で不要なら削除してOK
+      console.log(
+        `[ASMR Finder] DLsite クリック`,
+        { id: workId, title: workTitle, count: clickMap[workId] }
+      );
+    }
+
+    // 後方互換：既存の recordClick 呼び出し箇所はそのまま動く
+    function recordClick(workId) {
+      trackClick(workId);
+    }
+
+    // 指定作品のクリック数を返す（記録なしは0）
+    function getClickCount(workId) {
+      return clickMap[workId] ?? 0;
+    }
+
+    // ==============================================
+    // ④ クリック数に応じたUIラベルを返す
+    //
+    //   0〜2回  → ラベルなし
+    //   3〜6回  → 「👀 よく見られています」
+    //   7回以上 → 「🔥 人気」
+    // ==============================================
+    function getClickLabel(workId) {
+      const count = getClickCount(workId);
+      if (count >= 7) return `<span class="trending-label">🔥 人気</span>`;
+      if (count >= 3) return `<span class="trending-label">👀 よく見られています</span>`;
+      return "";
+    }
+
+    // クリック数インジケータ（カード下部に「👆 5回」のように表示）
+    function getClickIndicatorHtml(workId) {
+      const count = getClickCount(workId);
+      if (count === 0) return ""; // 未クリックは表示しない
+      const cls = count >= 7 ? "hot" : count >= 3 ? "warm" : "";
+      return `<p class="click-indicator ${cls}">👆 ${count}回 クリックされました</p>`;
+    }
+
+    // ==============================================
+    // ③ 最近見た作品（閲覧履歴）
+    //    localStorage に workId の配列を保存
+    //    最大10件・最新が先頭
+    // ==============================================
+    const HISTORY_MAX = 10;
+
+    function loadHistory() {
+      try {
+        return JSON.parse(localStorage.getItem("asmr_history") ?? "[]");
+      } catch { return []; }
+    }
+
+    function saveHistory(arr) {
+      localStorage.setItem("asmr_history", JSON.stringify(arr));
+    }
+
+    // 閲覧履歴に workId を追加（重複除去・上限管理）
+    function addHistory(workId) {
+      let history = loadHistory();
+      history = history.filter(id => id !== workId); // 既存の同IDを除去
+      history.unshift(workId);                       // 先頭に追加
+      if (history.length > HISTORY_MAX) history = history.slice(0, HISTORY_MAX);
+      saveHistory(history);
+      renderHistory(); // 表示を即更新
+    }
+
+    // 最近見た作品セクションを描画する
+    function renderHistory() {
+      const section = document.getElementById("historySection");
+      const list    = document.getElementById("historyList");
+      if (!section || !list) return;
+
+      const history = loadHistory();
+      // works が空（まだfetch中）のときは描画しない
+      if (works.length === 0 || history.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      // history の ID 順に作品データを取り出す
+      const historyWorks = history
+        .map(id => works.find(w => w.id === id))
+        .filter(Boolean); // データが見つからないIDは除外
+
+      if (historyWorks.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
+
+      list.innerHTML = "";
+      historyWorks.forEach(work => {
+        const card = document.createElement("div");
+        card.className = "history-card";
+        card.innerHTML = `
+          <img src="${work.img || DUMMY_SRC}" alt="${work.title}"
+               onerror="this.src='${DUMMY_SRC}'">
+          <p class="history-card-title">${work.title}</p>
+        `;
+        // クリックで詳細ページへ
+        card.addEventListener("click", () => {
+          window.location.href = `detail.html?id=${work.id}`;
+        });
+        list.appendChild(card);
+      });
+
+      section.style.display = "block";
+    }
+
+    // 「履歴を消す」ボタンのイベントを登録
+    function setupHistory() {
+      document.getElementById("historyClearBtn")?.addEventListener("click", () => {
+        saveHistory([]);
+        renderHistory();
+      });
+    }
+
+    // ==============================================
     // 7. アプリ起動：JSONを読み込んでから全UIを初期化
     // ==============================================
 
@@ -1337,13 +2032,11 @@
       updateModeLabel();
 
       // ③ ソートボタンのイベント登録
-      // クリックで currentSort を切り替えて再描画する
-      [sortRecommendBtn, sortNewestBtn].forEach(btn => {
+      [sortRecommendBtn, sortPopularBtn, sortNewestBtn].forEach(btn => {
+        if (!btn) return;
         btn.addEventListener("click", () => {
-          // active クラスを付け替え
-          [sortRecommendBtn, sortNewestBtn].forEach(b => b.classList.remove("active"));
+          [sortRecommendBtn, sortPopularBtn, sortNewestBtn].forEach(b => b?.classList.remove("active"));
           btn.classList.add("active");
-          // currentSort を更新（data-sort 属性から取得）
           currentSort = btn.dataset.sort;
           renderCards();
         });
@@ -1368,10 +2061,14 @@
       }
 
       // ④ works にデータが入った後でUIを初期化
-      buildTagButtons(); // タグボタン（works.json のタグから生成）
-      setupSearch();     // 検索イベント登録（works が空でないことが保証された状態で）
-      renderRanking(works, "total", "rankingGrid"); // 総合ランキング
-      renderCards();     // 初回カード描画
+      buildTagButtons();
+      setupSearch();
+      setupFavFilter();
+      setupHistory();                               // ③ 履歴クリアボタン登録
+      renderPickup(works);
+      renderRanking(works, "total", "rankingGrid");
+      renderHistory();                              // ③ 最近見た作品を表示
+      renderCards();
     }
 
     init(); // 起動
