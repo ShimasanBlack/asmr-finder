@@ -2049,7 +2049,7 @@
 
       try {
         // ② works.json を取得（await で完了を待つ）
-        const res = await fetch("works.json");
+        const res = await fetch("data/works.json");
         works = await res.json(); // ③ 配列として works に代入
 
       } catch (err) {
