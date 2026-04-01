@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>works.json エディター Pro</title>
+<style>
+/* ================================================================
+   RESET & CSS VARIABLES
+================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0c0e14;
+  --surface:   #161922;
+  --surface2:  #1e2230;
+  --surface3:  #252a3a;
+  --border:    rgba(110,130,190,0.14);
+  --border2:   rgba(110,130,190,0.28);
+  --accent:    #4f8ef7;
+  --accent-d:  #3a6fd4;
+  --green:     #34c98a;
+  --red:       #e8485a;
+  --amber:     #c9a96e;
+  --text:      #dde4f0;
+  --text2:     #8896b0;
+  --muted:     #525c72;
+  --r:         6px;
+  --hdr:       42px;   /* ヘッダー高さ */
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden; /* ① 各カラム独立スクロール：body自体はスクロールしない */
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  user-select: none; /* テキスト選択を無効化（テキスト入力内はJS側で許可） */
+}
+
+/* テキスト入力内は選択可能に */
+input, textarea, select, .json-display { user-select: text; }
+
+/* ================================================================
+   ① PC専用 3カラムレイアウト（モバイル対応完全削除）
+================================================================ */
+.app {
+  display: grid;
+  grid-template-rows: var(--hdr) 1fr;
+  height: 100vh;
+}
+
+/* ヘッダー */
+.hdr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 200;
+}
+.hdr-title { font-size: 0.88rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+.hdr-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 12px;
+}
+.hdr-sep { flex: 1; }
+.hdr-shortcuts {
+  font-size: 0.66rem;
+  color: var(--muted);
+  display: flex;
+  gap: 12px;
+}
+.hdr-shortcuts kbd {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-size: 0.65rem;
+  color: var(--text2);
+}
+.hdr-btn-group { display: flex; gap: 6px; }
+
+/* 3カラム本体 */
+.cols {
+  display: grid;
+  grid-template-columns: 360px 1fr 320px; /* 左:固定 中:伸縮 右:固定 */
+  overflow: hidden;
+}
+
+/* 各カラム：独立スクロール */
+.col {
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: 1px solid var(--border);
+}
+.col:last-child { border-right: none; }
+
+/* スクロールバースタイル */
+.col::-webkit-scrollbar { width: 5px; }
+.col::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+/* カラムヘッダー */
+.col-hdr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.col-hdr-count { color: var(--accent); font-size: 0.65rem; }
+
+/* ================================================================
+   左カラム：入力フォーム
+================================================================ */
+.form-col { padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ③ 編集モード視覚表示 */
+.form-col.edit-mode { background: rgba(79,142,247,0.04); }
+.edit-mode-banner {
+  display: none;
+  background: rgba(79,142,247,0.15);
+  border: 1px solid rgba(79,142,247,0.35);
+  border-radius: var(--r);
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+  align-items: center;
+  gap: 6px;
+}
+.edit-mode-banner.show { display: flex; }
+
+/* フォームセクション */
+.fsec {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 12px;
+}
+.fsec-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* フォームグリッド */
+.fg { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.fg .full { grid-column: 1 / -1; }
+
+/* フィールド */
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.03em;
+}
+
+/* ③ エラー状態 */
+.field.error input, .field.error textarea, .field.error select {
+  border-color: var(--red) !important;
+}
+.field-err {
+  font-size: 0.62rem;
+  color: var(--red);
+  min-height: 14px;
+  line-height: 1.3;
+}
+
+/* 入力要素 */
+input, textarea, select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 6px 9px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+textarea { resize: vertical; min-height: 58px; line-height: 1.45; }
+
+/* RJヒント */
+.rj-hint { font-size: 0.62rem; color: var(--green); min-height: 14px; }
+
+/* ⑦ タグ候補 */
+.tag-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.tag-chip {
+  padding: 2px 8px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.65rem;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tag-chip:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tag-chip.selected { background: rgba(79,142,247,0.2); border-color: var(--accent); color: var(--accent); }
+
+/* ⑦ カテゴリ select */
+select { cursor: pointer; }
+select option { background: var(--surface2); }
+
+/* ボタン */
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.12s, transform 0.1s;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.btn:hover  { opacity: 0.85; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent);  color: #fff; }
+.btn-green   { background: var(--green);   color: #0c0e14; }
+.btn-red     { background: var(--red);     color: #fff; }
+.btn-amber   { background: var(--amber);   color: #0c0e14; }
+.btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ================================================================
+   ④ 中央カラム：テーブル風一覧
+================================================================ */
+.list-col {}
+
+/* テーブルヘッダー */
+.tbl-head {
+  display: grid;
+  grid-template-columns: 24px 1fr 80px 60px 60px 40px;
+  gap: 0;
+  padding: 5px 8px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  position: sticky;
+  top: 37px; /* col-hdr分 */
+  z-index: 9;
+}
+
+/* ④ テーブル行 */
+.tbl-body { padding: 0; }
+
+.tbl-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 80px 60px 60px 40px;
+  align-items: center;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+}
+.tbl-row:hover { background: var(--surface2); }
+
+/* ④ 選択行ハイライト */
+.tbl-row.selected {
+  background: rgba(79,142,247,0.1);
+  border-color: rgba(79,142,247,0.2);
+}
+.tbl-row.selected .tbl-num { color: var(--accent); }
+
+/* ⑥ ドラッグ中スタイル */
+.tbl-row.dragging   { opacity: 0.4; background: var(--surface3); }
+
+/* ⑨ ドロップ位置インジケーター：行の上下に青いラインを表示 */
+.tbl-row.drop-above { box-shadow: 0 -2px 0 0 var(--accent); }
+.tbl-row.drop-below { box-shadow: 0  2px 0 0 var(--accent); }
+
+/* セル */
+.tbl-num  { font-size: 0.65rem; color: var(--muted); text-align: center; }
+.tbl-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 6px;
+}
+.tbl-id    { font-size: 0.65rem; color: var(--text2); font-family: monospace; }
+.tbl-price { font-size: 0.68rem; color: var(--amber); text-align: right; }
+.tbl-tags  {
+  font-size: 0.6rem;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ④ ホバー時の操作ボタン */
+.tbl-actions {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.tbl-row:hover .tbl-actions { opacity: 1; }
+.tbl-row.selected .tbl-actions { opacity: 1; }
+
+.tbl-act-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.1s, background 0.1s;
+  line-height: 1;
+}
+.tbl-act-btn:hover { color: var(--text); background: var(--surface3); }
+.tbl-act-btn.del:hover { color: var(--red); }
+.tbl-act-btn.ext { font-size: 0.68rem; }
+
+/* ⑥ ドラッグハンドル */
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+  line-height: 1;
+  padding: 0 2px;
+}
+.drag-handle:active { cursor: grabbing; }
+/* フィルター中はドラッグ不可を視覚的に示す */
+.filter-active .drag-handle {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+/* 空メッセージ */
+.empty-msg {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* ================================================================
+   右カラム：プレビュー + JSON
+================================================================ */
+.right-col { display: flex; flex-direction: column; overflow: hidden; }
+
+/* プレビューエリア（上半分） */
+.preview-area {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #0b0d12;
+}
+
+/* プレビューカード */
+.preview-card {
+  background: #13171f;
+  border: 1px solid rgba(120,150,200,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.preview-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+  background: #1c2130;
+  max-height: 160px; /* ⑪ コンパクト */
+}
+.preview-body { padding: 10px 12px 12px; }
+.preview-title { font-size: 0.82rem; font-weight: 700; line-height: 1.4; margin-bottom: 4px; color: #d8e0ec; }
+.preview-desc  { font-size: 0.68rem; color: #6b7a96; line-height: 1.5; margin-bottom: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.preview-tags  { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
+.preview-tag   { font-size: 0.6rem; padding: 1px 6px; background: rgba(91,141,238,0.1);
+  border: 1px solid rgba(91,141,238,0.2); border-radius: 8px; color: #7eb8d4; }
+.preview-cta   { display: block; text-align: center; padding: 7px;
+  background: linear-gradient(135deg, #7eb8d4, #5a9db8); border-radius: 6px;
+  color: #0b0e13; font-size: 0.75rem; font-weight: 700; }
+.preview-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 30px 16px; color: var(--muted); font-size: 0.75rem; text-align: center;
+  border: 1px dashed var(--border); border-radius: 10px;
+}
+
+/* ⑧ JSONエリア（下半分）：flex + 独立スクロール */
+.json-area {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 8px 12px 10px;
+}
+.json-area-hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.json-area-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; flex: 1; }
+
+/* ⑧ 行番号付きJSONエリア */
+.json-wrap {
+  flex: 1 1 0;
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  display: flex;
+}
+.json-lines {
+  padding: 10px 6px 10px 10px;
+  font-family: "Consolas","Courier New",monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: right;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  min-width: 32px;
+  user-select: none;
+}
+.json-display {
+  flex: 1;
+  padding: 10px 12px;
+  font-family: "Consolas","Courier New",monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: #a8b8d0;
+  white-space: pre;
+  overflow: visible;
+}
+
+/* ⑨ インポート用非表示input */
+#importFile { display: none; }
+
+/* ================================================================
+   トースト / エラーバナー
+================================================================ */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 9px 18px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.22s, transform 0.22s;
+  pointer-events: none;
+  z-index: 9999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok   { background: var(--green); color: #0c0e14; }
+.toast.err  { background: var(--red);   color: #fff; }
+.toast.info { background: var(--accent); color: #fff; }
+/* 【7】アンドゥトースト（削除直後に「元に戻す」を表示） */
+.undo-toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 0.78rem; color: var(--text);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s, transform 0.22s;
+  z-index: 9998; white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.undo-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+.undo-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 4px; padding: 3px 12px; font-size: 0.75rem;
+  font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.undo-btn:hover { opacity: 0.85; }
+/* 【3】モーダル */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000; opacity: 0; pointer-events: none;
+  transition: opacity 0.18s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 22px 24px; min-width: 300px; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal-msg { font-size: 0.88rem; line-height: 1.6; margin-bottom: 18px; color: var(--text); }
+.modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== ヘッダー ===== -->
+  <header class="hdr">
+    <span class="hdr-title">📋 works.json エディター Pro</span>
+    <span class="hdr-badge" id="countBadge">0 件</span>
+    <span class="hdr-sep"></span>
+
+    <!-- ② キーボードショートカット表示 -->
+    <div class="hdr-shortcuts">
+      <span><kbd>Ctrl+Enter</kbd> 追加</span>
+      <span><kbd>Ctrl+⇧+C</kbd> コピー</span>
+      <span><kbd>↑↓</kbd> 選択</span>
+      <span><kbd>Del</kbd> 削除</span>
+      <span><kbd>Esc</kbd> キャンセル</span>
+    </div>
+
+    <!-- ⑨ エクスポート / インポート -->
+    <div class="hdr-btn-group">
+      <button class="btn btn-ghost" id="exportBtn" title="JSONをファイルに保存">⬇ Export</button>
+      <button class="btn btn-ghost" id="importBtn" title="JSONファイルを読み込む">⬆ Import</button>
+      <input type="file" id="importFile" accept=".json" />
+      <button class="btn btn-red"   id="clearAllBtn" title="全件削除">🗑 全消去</button>
+    </div>
+  </header>
+
+  <!-- ===== 3カラム本体 ===== -->
+  <div class="cols">
+
+    <!-- ════════ 左：入力フォーム ════════ -->
+    <div class="col">
+      <div class="col-hdr">
+        ✏️ 入力フォーム
+        <span id="editModeBadge" style="display:none;color:var(--amber);font-weight:700">編集中</span>
+      </div>
+
+      <div class="form-col" id="formCol">
+
+        <!-- ⑤ 編集モードバナー -->
+        <div class="edit-mode-banner" id="editBanner">
+          ✏️ 編集モード — <span id="editBannerTitle"></span>
+          <span style="flex:1"></span>
+          <button class="btn btn-ghost" id="cancelEditBtn" style="padding:3px 10px;font-size:0.7rem">キャンセル</button>
+        </div>
+
+        <!-- URL入力 -->
+        <div class="fsec">
+          <p class="fsec-title">URL → 自動入力</p>
+          <div class="field" id="fld-url">
+            <label>DLsite URL <span style="color:var(--red)">*</span></label>
+            <input type="url" id="urlInput" tabindex="1"
+                   placeholder="https://www.dlsite.com/.../RJxxxxxx.html"
+                   autocomplete="off" />
+            <span class="rj-hint" id="rjHint"></span>
+            <span class="field-err" id="err-url"></span>
+          </div>
+        </div>
+
+        <!-- 基本情報 -->
+        <div class="fsec">
+          <p class="fsec-title">基本情報</p>
+          <div class="fg">
+            <div class="field" id="fld-id">
+              <label>ID (RJxxxxxx)</label>
+              <input type="text" id="fId" tabindex="2" placeholder="RJ000000" />
+              <span class="field-err" id="err-id"></span>
+            </div>
+            <div class="field" id="fld-price">
+              <label>価格（円） <span style="color:var(--red)">*</span></label>
+              <input type="number" id="fPrice" tabindex="3" placeholder="880" min="0" />
+              <span class="field-err" id="err-price"></span>
+            </div>
+            <div class="field full" id="fld-title">
+              <label>タイトル <span style="color:var(--red)">*</span></label>
+              <input type="text" id="fTitle" tabindex="4" placeholder="作品タイトル" />
+              <span class="field-err" id="err-title"></span>
+            </div>
+            <div class="field full">
+              <label>サークル名</label>
+              <input type="text" id="fMaker" tabindex="5" placeholder="サークル名" />
+            </div>
+            <div class="field full" id="fld-image">
+              <label>画像URL</label>
+              <input type="url" id="fImage" tabindex="6" placeholder="https://img.dlsite.jp/..." />
+              <span class="field-err" id="err-image"></span>
+            </div>
+
+            <!-- ⑦ カテゴリを選択式に変更 -->
+            <div class="field full">
+              <label>カテゴリ</label>
+              <select id="fCategory" tabindex="7">
+                <option value="">-- 選択 --</option>
+                <option value="耳かき">耳かき</option>
+                <option value="囁き">囁き</option>
+                <option value="バイノーラル">バイノーラル</option>
+                <option value="自然音">自然音</option>
+                <option value="睡眠導入">睡眠導入</option>
+                <option value="添い寝">添い寝</option>
+                <option value="ヤンデレ">ヤンデレ</option>
+                <option value="ツンデレ">ツンデレ</option>
+                <option value="読み聞かせ">読み聞かせ</option>
+                <option value="マッサージ">マッサージ</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+
+            <!-- ⑦ タグ入力 + 候補チップ -->
+            <div class="field full">
+              <label>タグ（カンマ区切り）</label>
+              <input type="text" id="fTags" tabindex="8" placeholder="ASMR, 耳かき, 癒し系" />
+              <div class="tag-candidates" id="tagCandidates"></div>
+            </div>
+
+            <div class="field full">
+              <label>説明文</label>
+              <textarea id="fDesc" tabindex="9" rows="3"
+                placeholder="タイトル入力後に自動生成"></textarea>
+            </div>
+            <div class="field full">
+              <label>CTA文言</label>
+              <input type="text" id="fCta" tabindex="10" placeholder="今すぐ聴いて癒される" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ② 追加 / 更新ボタン -->
+        <div class="btn-row">
+          <button class="btn btn-green"   id="addBtn"    tabindex="11">＋ 追加 (Ctrl+Enter)</button>
+          <button class="btn btn-amber"   id="updateBtn" tabindex="12" style="display:none">💾 更新</button>
+          <button class="btn btn-ghost"   id="clearFormBtn" tabindex="13">リセット</button>
+        </div>
+
+      </div><!-- /form-col -->
+    </div><!-- /左カラム -->
+
+
+    <!-- ════════ 中央：作品一覧 ════════ -->
+    <div class="col list-col" id="listCol">
+      <div class="col-hdr">
+        📋 作品一覧
+        <span class="col-hdr-count" id="listCount">0件</span>
+        <span style="flex:1"></span>
+        <span style="font-size:0.62rem;color:var(--muted)">行をドラッグで並び替え</span>
+      </div>
+
+      <!-- 【10】絞り込みフィルター -->
+      <div style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--surface);">
+        <input type="text" id="listFilter"
+               placeholder="🔍 タイトル / ID / タグで絞り込み"
+               style="width:100%;font-size:0.78rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;"
+               autocomplete="off" />
+      </div>
+
+      <!-- ④ テーブルヘッダー -->
+      <div class="tbl-head">
+        <div>⠿</div>
+        <div>タイトル</div>
+        <div>ID</div>
+        <div style="text-align:right">価格</div>
+        <div>タグ</div>
+        <div></div>
+      </div>
+
+      <!-- テーブル本体（JSで生成） -->
+      <div class="tbl-body" id="tblBody">
+        <div class="empty-msg">まだ作品が追加されていません</div>
+      </div>
+    </div><!-- /中央カラム -->
+
+
+    <!-- ════════ 右：プレビュー + JSON ════════ -->
+    <div class="col right-col">
+
+      <!-- プレビュー -->
+      <div class="col-hdr">👁 プレビュー</div>
+      <div class="preview-area">
+        <div id="previewWrap">
+          <div class="preview-placeholder">
+            <span style="font-size:2rem;opacity:.35">🎧</span>
+            <span>URLかタイトルを入力</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑧ JSON出力（自動更新・行番号付き） -->
+      <div class="json-area">
+        <div class="json-area-hdr">
+          <span class="json-area-title">⑧ JSON（自動更新）</span>
+          <!-- ⑧ コピーボタン固定表示 -->
+          <button class="btn btn-primary" id="copyBtn" style="padding:4px 12px;font-size:0.72rem">
+            📋 コピー (Ctrl+⇧+C)
+          </button>
+        </div>
+        <div class="json-wrap" id="jsonWrap">
+          <div class="json-lines"  id="jsonLines"></div>
+          <div class="json-display" id="jsonDisplay"></div>
+        </div>
+      </div>
+
+    </div><!-- /右カラム -->
+
+  </div><!-- /cols -->
+</div><!-- /app -->
+
+<!-- 【7】アンドゥトースト -->
+<div class="undo-toast" id="undoToast">
+  <span id="undoMsg"></span>
+  <button class="undo-btn" id="undoBtn">元に戻す</button>
+</div>
+
+<!-- 【3】カスタム確認モーダル（confirm代替） -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <p class="modal-msg" id="modalMsg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="modalNo">いいえ</button>
+      <button class="btn btn-primary" id="modalYes">はい</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+// ================================================================
+//  works.json エディター Pro — メインスクリプト
+//
+//  実装済み機能：
+//    ① 3カラムレイアウト / 独立スクロール
+//    ② キーボードショートカット (Ctrl+Enter, Ctrl+Shift+C, ↑↓, Del, Esc)
+//    ③ UI内バリデーション / 赤枠ハイライト / alertなし
+//    ④ テーブル風一覧 / 選択 / ホバーボタン
+//    ⑤ 編集モード（クリック→フォーム反映→更新）
+//    ⑥ ドラッグ＆ドロップ並び替え
+//    ⑦ タグ候補チップ / カテゴリ選択式
+//    ⑧ JSON自動更新 / 行番号 / コピーボタン固定
+//    ⑨ エクスポート（ダウンロード） / インポート（ファイル読込）
+//    ⑩ 差分更新（変更行のみ再描画）
+// ================================================================
+
+// ──────────────────────────────────────
+// 状態
+// ──────────────────────────────────────
+let works       = [];          // 作品配列
+let selectedIdx = -1;          // ④ 現在選択中の行インデックス
+let editIdx     = -1;          // ⑤ 編集中の行インデックス（-1=新規追加モード）
+let dragSrcIdx  = -1;          // ⑥ ドラッグ元インデックス
+
+// ──────────────────────────────────────
+// DOM参照
+// ──────────────────────────────────────
+const urlInput     = document.getElementById("urlInput");
+const rjHint       = document.getElementById("rjHint");
+const fId          = document.getElementById("fId");
+const fPrice       = document.getElementById("fPrice");
+const fTitle       = document.getElementById("fTitle");
+const fMaker       = document.getElementById("fMaker");
+const fImage       = document.getElementById("fImage");
+const fCategory    = document.getElementById("fCategory");
+const fTags        = document.getElementById("fTags");
+const fDesc        = document.getElementById("fDesc");
+const fCta         = document.getElementById("fCta");
+const addBtn       = document.getElementById("addBtn");
+const updateBtn    = document.getElementById("updateBtn");
+const clearFormBtn = document.getElementById("clearFormBtn");
+const cancelEditBtn= document.getElementById("cancelEditBtn");
+const tblBody      = document.getElementById("tblBody");
+const countBadge   = document.getElementById("countBadge");
+const listCount    = document.getElementById("listCount");
+const previewWrap  = document.getElementById("previewWrap");
+const jsonDisplay  = document.getElementById("jsonDisplay");
+const jsonLines    = document.getElementById("jsonLines");
+const copyBtn      = document.getElementById("copyBtn");
+const clearAllBtn  = document.getElementById("clearAllBtn");
+const exportBtn    = document.getElementById("exportBtn");
+const importBtn    = document.getElementById("importBtn");
+const importFile   = document.getElementById("importFile");
+const editBanner   = document.getElementById("editBanner");
+const editBannerTitle = document.getElementById("editBannerTitle");
+const editModeBadge= document.getElementById("editModeBadge");
+const formCol      = document.getElementById("formCol");
+const toast        = document.getElementById("toast");
+const tagCandidates= document.getElementById("tagCandidates");
+const listFilter   = document.getElementById("listFilter"); // 【10】
+
+// ──────────────────────────────────────
+// ⑦ タグ候補一覧
+// ──────────────────────────────────────
+const TAG_CANDIDATES = [
+  "ASMR","耳かき","囁き","バイノーラル","自然音","雨音",
+  "睡眠導入","添い寝","癒し系","甘々","ヤンデレ","ツンデレ",
+  "幼なじみ","お姉さん","マッサージ","読み聞かせ","ダーク系",
+];
+
+// タグ候補チップを描画する
+function buildTagChips() {
+  tagCandidates.innerHTML = TAG_CANDIDATES.map(t =>
+    `<span class="tag-chip" data-tag="${t}">${t}</span>`
+  ).join("");
+
+  tagCandidates.querySelectorAll(".tag-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const tag = chip.dataset.tag;
+      const current = parseTags(fTags.value);
+      if (current.includes(tag)) {
+        // 既に入っていれば削除
+        fTags.value = current.filter(t => t !== tag).join(", ");
+        chip.classList.remove("selected");
+      } else {
+        // 追加
+        fTags.value = [...current, tag].join(", ");
+        chip.classList.add("selected");
+      }
+      updatePreview();
+    });
+  });
+}
+
+// タグ入力に合わせてチップの選択状態を更新
+function syncTagChips() {
+  const current = parseTags(fTags.value);
+  tagCandidates.querySelectorAll(".tag-chip").forEach(chip => {
+    chip.classList.toggle("selected", current.includes(chip.dataset.tag));
+  });
+}
+
+// ──────────────────────────────────────
+// ③ URL入力 → RJコード自動抽出
+// ──────────────────────────────────────
+urlInput.addEventListener("input", () => {
+  const url = urlInput.value.trim();
+  const match = url.match(/RJ\d+/i);
+  if (match) {
+    const rj = match[0].toUpperCase();
+    if (!fId.value) fId.value = rj;
+    rjHint.textContent = `✅ ${rj}`;
+  } else {
+    rjHint.textContent = url ? "⚠️ RJコードなし" : "";
+    if (!url && editIdx === -1) fId.value = "";
+  }
+  // ⑤ 将来：URL貼り付け時にtitle/image/priceを自動取得する設計
+  //    現状はDLsiteのCORSポリシーによりfetch不可。
+  //    解決策：プロキシサーバーまたはNode.jsスクリプト経由で取得する。
+  //    実装例: fetch(`/api/scrape?url=${encodeURIComponent(url)}`)
+  //              .then(r => r.json())
+  //              .then(d => { fTitle.value = d.title; fImage.value = d.image; ... })
+});
+
+// ──────────────────────────────────────
+// タイトル入力 → 説明文・CTA自動生成
+// ──────────────────────────────────────
+fTitle.addEventListener("input", () => {
+  const title = fTitle.value.trim();
+  if (!title) return;
+  if (!fDesc.value.trim()) {
+    fDesc.value = `${title}は癒し系のASMR作品です。リラックスしたい方におすすめ。`;
+  }
+  if (!fCta.value.trim()) fCta.value = "今すぐ聴いて癒される";
+  updatePreview();
+});
+
+// プレビューを更新するフィールド群
+[fTitle, fDesc, fImage, fTags, fCta].forEach(el =>
+  el.addEventListener("input", updatePreview)
+);
+fTags.addEventListener("input", syncTagChips);
+
+// ──────────────────────────────────────
+// ② リアルタイムプレビュー
+// ──────────────────────────────────────
+function updatePreview() {
+  const title = fTitle.value.trim();
+  const desc  = fDesc.value.trim();
+  const img   = fImage.value.trim();
+  const cta   = fCta.value.trim() || "今すぐ聴いて癒される";
+  const tags  = parseTags(fTags.value);
+
+  if (!title && !img) {
+    previewWrap.innerHTML = `<div class="preview-placeholder">
+      <span style="font-size:2rem;opacity:.35">🎧</span>
+      <span>URLかタイトルを入力</span></div>`;
+    return;
+  }
+  const tagsHtml = tags.map(t => `<span class="preview-tag">${esc(t)}</span>`).join("");
+  const imgHtml = img
+    ? `<img class="preview-img" src="${esc(safeUrl(img))}" alt="${esc(title)}" onerror="this.style.display='none'">`
+    : `<div class="preview-img" style="display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#2a3050">🎧</div>`;
+
+  previewWrap.innerHTML = `
+    <div class="preview-card">
+      ${imgHtml}
+      <div class="preview-body">
+        <p class="preview-title">${esc(title) || "タイトル未入力"}</p>
+        ${tags.length ? `<div class="preview-tags">${tagsHtml}</div>` : ""}
+        <p class="preview-desc">${esc(desc) || "説明文未入力"}</p>
+        <span class="preview-cta">🎧 ${esc(cta)}</span>
+      </div>
+    </div>`;
+}
+
+// ──────────────────────────────────────
+// ③ バリデーション（alertなし・UI内表示）
+// ──────────────────────────────────────
+function setFieldError(fieldId, errId, msg) {
+  const fld = document.getElementById(fieldId);
+  const err = document.getElementById(errId);
+  if (msg) {
+    fld?.classList.add("error");
+    if (err) err.textContent = msg;
+  } else {
+    fld?.classList.remove("error");
+    if (err) err.textContent = "";
+  }
+}
+
+function clearAllErrors() {
+  ["fld-url","fld-id","fld-title","fld-price","fld-image"].forEach(id => {
+    document.getElementById(id)?.classList.remove("error");
+  });
+  ["err-url","err-id","err-title","err-price","err-image"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "";
+  });
+}
+
+// フォームの値を収集してバリデーション
+// 戻り値: { valid: bool, work: obj }
+function validateAndBuild() {
+  clearAllErrors();
+  let valid = true;
+
+  const url   = urlInput.value.trim();
+  const title = fTitle.value.trim();
+  const id    = fId.value.trim();
+  const price = fPrice.value.trim();
+
+  if (!url)   { setFieldError("fld-url",   "err-url",   "URLは必須です"); valid = false; }
+  if (!title) { setFieldError("fld-title", "err-title", "タイトルは必須です"); valid = false; }
+  if (!price) { setFieldError("fld-price", "err-price", "価格は必須です"); valid = false; }
+
+  // ⑨ 画像URLの軽いバリデーション（http(s)で始まり画像拡張子を含むか）
+  const imageVal = fImage.value.trim();
+  if (imageVal && !safeUrl(imageVal)) {
+    setFieldError("fld-image", "err-image", "画像URLはhttps://から始めてください");
+    valid = false;
+  }
+
+  // 重複チェック：自分自身（editIdx）は除外して他の作品と比較
+  if (id && works.some((w, i) => w.id === id && i !== editIdx)) {
+    setFieldError("fld-id", "err-id", `「${id}」は追加済みです`);
+    valid = false;
+  }
+
+  if (!valid) return { valid: false };
+
+  return {
+    valid: true,
+    work: {
+      id,
+      title,
+      maker:       fMaker.value.trim() || "",
+      price:       Number(price) || 0,
+      url:         safeUrl(url) || url, // ⑨ スキーム検証
+      image:       safeUrl(imageVal) || "", // ⑨ 不正URLは空に
+      category:    fCategory.value || "",
+      tags:        parseTags(fTags.value), // ⑥⑨ 正規化＋重複排除済み
+      description: fDesc.value.trim() || "",
+      cta:         fCta.value.trim() || "今すぐ聴いて癒される",
+      createdAt:   editIdx === -1
+        ? new Date().toISOString()
+        : (works[editIdx]?.createdAt ?? new Date().toISOString()),
+    }
+  };
+}
+
+// ──────────────────────────────────────
+// 作品を追加する
+// ──────────────────────────────────────
+function doAdd() {
+  const { valid, work } = validateAndBuild();
+  if (!valid) { showToast("必須項目を入力してください", "err"); return; }
+
+  works.push(work);
+  // ※ 追加順がそのまま保存順（ドラッグ並び替えを壊さないようsortしない）
+
+  persist();
+  clearDraft();
+  renderTable(true);
+  updateJson();
+  // ⑧ 追加後は先頭（最新）を選択状態にして即編集できるようにする
+  selectedIdx = works.length - 1;
+  renderTable(true);
+  clearForm();
+  showToast(`✅「${work.title}」を追加しました`, "ok");
+}
+
+addBtn.addEventListener("click", doAdd);
+
+// ──────────────────────────────────────
+// ⑤ 編集モード
+// ──────────────────────────────────────
+function enterEditMode(idx) {
+  editIdx = idx;
+  const w = works[idx];
+
+  // フォームに値を反映
+  urlInput.value  = w.url       || "";
+  fId.value       = w.id        || "";
+  fTitle.value    = w.title     || "";
+  fMaker.value    = w.maker     || "";
+  fPrice.value    = w.price     || "";
+  fImage.value    = w.image     || "";
+  fCategory.value = w.category  || "";
+  fTags.value     = (w.tags || []).join(", ");
+  fDesc.value     = w.description || "";
+  fCta.value      = w.cta       || "";
+  rjHint.textContent = w.id ? `✅ ${w.id}` : "";
+
+  syncTagChips();
+  updatePreview();
+  clearAllErrors();
+
+  // UI表示切り替え
+  addBtn.style.display    = "none";
+  updateBtn.style.display = "";
+  editBanner.classList.add("show");
+  editBannerTitle.textContent = w.title;
+  editModeBadge.style.display = "";
+  formCol.classList.add("edit-mode");
+
+  // 一覧の選択状態
+  selectRow(idx);
+
+  // フォームの先頭へスクロール
+  document.querySelector(".col").scrollTop = 0;
+}
+
+function exitEditMode() {
+  editIdx = -1;
+  addBtn.style.display    = "";
+  updateBtn.style.display = "none";
+  editBanner.classList.remove("show");
+  editModeBadge.style.display = "none";
+  formCol.classList.remove("edit-mode");
+  clearAllErrors();
+}
+
+// 更新ボタン
+updateBtn.addEventListener("click", () => {
+  if (editIdx === -1) return;
+  const { valid, work } = validateAndBuild();
+  if (!valid) { showToast("必須項目を入力してください", "err"); return; }
+
+  works[editIdx] = work;
+  persist();
+  clearDraft(); // ⑤ 更新確定時にドラフトを削除
+  renderTable(true); // 【4】force=trueで確実に再描画
+  updateJson();
+  clearForm();
+  showToast(`💾「${work.title}」を更新しました`, "info");
+});
+
+// キャンセル
+cancelEditBtn.addEventListener("click", () => {
+  exitEditMode();
+  clearForm();
+});
+
+// ──────────────────────────────────────
+// ④ テーブル描画（⑩ 差分更新）
+// ──────────────────────────────────────
+// 前回の renders ハッシュ（軽量差分比較用）
+let lastRenderHash = "";
+
+function renderTable(force = false) {
+  // ─────────────────────────────────────────────────────
+  // TODO: 将来の規模拡大時に以下の3関数に分割すること
+  //   getVisibleWorks() … フィルタリング・ハッシュ計算
+  //   renderRows()      … HTML生成・DOM反映
+  //   bindDragEvents()  … D&Dイベント登録
+  // クリック系は起動時の委譲（tblBody.addEventListener）に移行済み
+  // ─────────────────────────────────────────────────────
+
+  // ── フィルタリング ────────────────────────────────────
+  const filterQ = listFilter.value.trim().toLowerCase();
+  // ⑦ 軽量ハッシュ：JSON.stringify全件は件数増加時に重いため先頭末尾IDで代替
+  const hash = works.length + "-" + selectedIdx + "-" + filterQ
+             + "-" + (works[0]?.id ?? "") + "-" + (works[works.length-1]?.id ?? "");
+  if (!force && hash === lastRenderHash) return;
+  lastRenderHash = hash;
+
+  const visible = filterQ
+    ? works.filter(w =>
+        (w.title  ?? "").toLowerCase().includes(filterQ) ||
+        (w.id     ?? "").toLowerCase().includes(filterQ) ||
+        (w.tags   ?? []).some(t => t.toLowerCase().includes(filterQ))
+      )
+    : works;
+
+  countBadge.textContent = `${works.length} 件`;
+  listCount.textContent  = filterQ
+    ? `${visible.length}/${works.length}件`
+    : `${works.length}件`;
+
+  // フィルター中はD&D不可を視覚表示
+  tblBody.classList.toggle("filter-active", !!filterQ);
+
+  if (visible.length === 0) {
+    tblBody.innerHTML = `<div class="empty-msg">${
+      filterQ ? `「${filterQ}」に一致する作品はありません` : "まだ作品が追加されていません"
+    }</div>`;
+    return;
+  }
+
+  // ── HTML生成 ──────────────────────────────────────────
+  tblBody.innerHTML = visible.map((w) => {
+    const i = works.findIndex(x => x.id === w.id && x.createdAt === w.createdAt);
+    return `
+    <div class="tbl-row ${i === selectedIdx ? 'selected' : ''}"
+         data-idx="${i}"
+         draggable="true">
+      <div class="drag-handle" title="ドラッグで並び替え">⠿</div>
+      <div class="tbl-title" data-idx="${i}" title="${esc(w.title)}">${esc(w.title)}</div>
+      <div class="tbl-id">${esc(w.id) || "—"}</div>
+      <div class="tbl-price">${w.price ? Number(w.price).toLocaleString()+"円" : "—"}</div>
+      <div class="tbl-tags">${esc((w.tags||[]).slice(0,3).join(", "))}</div>
+      <div class="tbl-actions">
+        <button class="tbl-act-btn ext" data-act="ext" data-idx="${i}" title="DLsiteで開く">↗</button>
+        <button class="tbl-act-btn del" data-act="del" data-idx="${i}" title="削除">✕</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  // ④ title をtextContentで上書き（XSSをesc()の後さらに確実に無効化）
+  //    row.dataset.idx から確実にインデックスを取得する
+  tblBody.querySelectorAll(".tbl-row").forEach(row => {
+    const idx     = Number(row.dataset.idx);
+    const titleEl = row.querySelector(".tbl-title");
+    if (titleEl) titleEl.textContent = works[idx]?.title ?? "";
+  });
+
+  // ── D&Dイベント登録 ───────────────────────────────────
+  // ※ クリック系は起動時に tblBody への委譲で登録済み（ここでは不要）
+  // ※ D&Dは dragover/drop のターゲット特定が必要なため各行に個別登録を維持
+  tblBody.querySelectorAll(".tbl-row").forEach(row => {
+    // ⑥⑨ D&D + ドロップ位置インジケーター
+    // （委譲では dragover/drop のターゲット特定が困難なため個別登録を維持）
+
+    row.addEventListener("dragstart", e => {
+      if (filterQ) { e.preventDefault(); return; }
+      dragSrcIdx = Number(row.dataset.idx);
+      row.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    row.addEventListener("dragend", () => {
+      row.classList.remove("dragging");
+      // ⑨ すべてのインジケーターをクリア
+      _clearDropIndicators();
+    });
+
+    row.addEventListener("dragover", e => {
+      if (filterQ) return;
+      e.preventDefault();
+      _clearDropIndicators();
+      // ⑨ マウス位置が行の上半分か下半分かで挿入位置を決定
+      const rect    = row.getBoundingClientRect();
+      const midY    = rect.top + rect.height / 2;
+      const isAbove = e.clientY < midY;
+      row.classList.add(isAbove ? "drop-above" : "drop-below");
+      // ⑨ どちらに挿入するかを行要素に記録（drop イベントで参照）
+      row.dataset.dropPos = isAbove ? "above" : "below";
+    });
+
+    row.addEventListener("dragleave", () => {
+      // 他の行に移ったときインジケーターを消す
+      row.classList.remove("drop-above", "drop-below");
+    });
+
+    row.addEventListener("drop", e => {
+      if (filterQ) return;
+      e.preventDefault();
+      _clearDropIndicators();
+
+      const destIdx = Number(row.dataset.idx);
+      const dropPos = row.dataset.dropPos ?? "above";
+      delete row.dataset.dropPos;
+
+      if (dragSrcIdx === -1 || dragSrcIdx === destIdx) return;
+
+      // ⑨ 上半分にドロップ → destIdx の前、下半分 → destIdx の後
+      const [moved] = works.splice(dragSrcIdx, 1);
+      // splice後のインデックスを補正
+      const insertAt = dragSrcIdx < destIdx
+        ? (dropPos === "above" ? destIdx - 1 : destIdx)
+        : (dropPos === "above" ? destIdx     : destIdx + 1);
+      works.splice(Math.max(0, insertAt), 0, moved);
+
+      if (selectedIdx === dragSrcIdx) selectedIdx = insertAt;
+      if (editIdx    === dragSrcIdx) editIdx = insertAt;
+
+      dragSrcIdx = -1;
+      persist();
+      renderTable(true);
+      updateJson();
+    });
+  });
+}
+
+// ⑨ インジケーター全クリアのヘルパー
+function _clearDropIndicators() {
+  tblBody.querySelectorAll(".drop-above, .drop-below").forEach(r => {
+    r.classList.remove("drop-above", "drop-below");
+  });
+}
+
+// 行を選択状態にする（UI更新のみ）
+function selectRow(idx) {
+  selectedIdx = idx;
+  tblBody.querySelectorAll(".tbl-row").forEach((row, i) => {
+    row.classList.toggle("selected", i === idx);
+  });
+}
+
+// 【7】アンドゥ用バッファ
+let _undoBuffer = null; // { work, idx } を一時保存
+
+function deleteWork(idx) {
+  const work  = works[idx];
+  const title = work?.title ?? "";
+
+  // 削除前の状態を保存（1件分のみ）
+  _undoBuffer = { work: JSON.parse(JSON.stringify(work)), idx };
+
+  works.splice(idx, 1);
+  if (selectedIdx >= works.length) selectedIdx = works.length - 1;
+  if (editIdx === idx) { exitEditMode(); clearForm(); }
+  persist();
+  renderTable(true);
+  updateJson();
+
+  // 【7】5秒間「元に戻す」ボタンをトーストに表示
+  _showUndoToast(`🗑「${title}」を削除`);
+}
+
+// ──────────────────────────────────────
+// ⑧ JSON自動更新（行番号付き）
+// ──────────────────────────────────────
+function updateJson() {
+  if (works.length === 0) {
+    jsonDisplay.textContent = "";
+    jsonLines.textContent   = "";
+    return;
+  }
+  const json  = JSON.stringify(works, null, 2);
+  const lines = json.split("\n");
+  jsonDisplay.textContent = json;
+  jsonLines.textContent   = lines.map((_, i) => i + 1).join("\n");
+}
+
+// ④ 行番号とJSONのスクロールを同期（ズレを防ぐ）
+document.getElementById("jsonWrap").addEventListener("scroll", function() {
+  jsonLines.scrollTop = this.scrollTop;
+});
+
+// ⑧ コピーボタン（固定表示）
+copyBtn.addEventListener("click", doCopy);
+
+async function doCopy() {
+  const json = JSON.stringify(works, null, 2);
+  if (!json || works.length === 0) { showToast("コピーするデータがありません", "err"); return; }
+  try {
+    await navigator.clipboard.writeText(json);
+    showToast("📋 JSONをコピーしました", "ok");
+  } catch {
+    // フォールバック
+    const ta = document.createElement("textarea");
+    ta.value = json;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast("📋 コピーしました", "ok");
+  }
+}
+
+// ──────────────────────────────────────
+// ⑨ エクスポート（ダウンロード）
+// ──────────────────────────────────────
+exportBtn.addEventListener("click", () => {
+  if (works.length === 0) { showToast("エクスポートするデータがありません", "err"); return; }
+  const blob = new Blob([JSON.stringify(works, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  // 【9】時刻まで含めて同日の上書きを防ぐ（例: works_2026-04-01_09-30.json）
+  a.download = `works_${new Date().toISOString().slice(0,16).replace("T","_").replace(":","-")}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast("⬇ エクスポートしました", "ok");
+});
+
+// ⑨ インポート（ファイル読み込み）
+importBtn.addEventListener("click", () => importFile.click());
+
+importFile.addEventListener("change", () => {
+  const file = importFile.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const raw = JSON.parse(e.target.result);
+      if (!Array.isArray(raw)) throw new Error("配列ではありません");
+
+      // 【5】インポートデータをサニタイズ（各フィールドの型を強制）
+      const data = raw.map(w => ({
+        id:          String(w.id          ?? ""),
+        title:       String(w.title       ?? "無題"),
+        maker:       String(w.maker       ?? ""),
+        price:       Number(w.price       ?? 0),
+        url:         safeUrl(String(w.url ?? "")), // 【2】URLも検証
+        image:       safeUrl(String(w.image ?? "")),
+        category:    String(w.category    ?? ""),
+        tags:        Array.isArray(w.tags) ? w.tags.map(t => String(t)) : [],
+        description: String(w.description ?? ""),
+        cta:         String(w.cta         ?? ""),
+        createdAt:   String(w.createdAt   ?? new Date().toISOString()),
+      }));
+
+      if (works.length > 0) {
+        // 【3】confirm() → showConfirm()
+        const overwrite = await showConfirm(
+          `現在の${works.length}件のデータがあります。\n上書きしますか？（いいえ＝マージ）`,
+          "上書き", "マージ"
+        );
+        if (overwrite) {
+          works = data;
+          showToast(`⬆ ${data.length}件をインポートしました`, "ok");
+        } else {
+          const existIds = new Set(works.map(w => w.id).filter(Boolean));
+          const added = data.filter(w => !w.id || !existIds.has(w.id));
+          works.push(...added);
+          showToast(`⬆ ${added.length}件をマージしました`, "ok");
+        }
+      } else {
+        works = data;
+        showToast(`⬆ ${data.length}件をインポートしました`, "ok");
+      }
+      persist();
+      renderTable(true);
+      updateJson();
+    } catch (err) {
+      console.warn("インポートエラー:", err);
+      showToast("❌ JSONの読み込みに失敗しました", "err");
+    }
+    importFile.value = "";
+  };
+  reader.readAsText(file);
+});
+
+// ──────────────────────────────────────
+// フォームクリア
+// ──────────────────────────────────────
+clearFormBtn.addEventListener("click", () => {
+  if (editIdx !== -1) { exitEditMode(); }
+  clearForm();
+});
+
+function clearForm() {
+  exitEditMode();
+  urlInput.value = fId.value = fTitle.value = fMaker.value = "";
+  fPrice.value   = fImage.value = fTags.value = fDesc.value = fCta.value = "";
+  fCategory.value = "";
+  rjHint.textContent = "";
+  clearAllErrors();
+  syncTagChips();
+  updatePreview();
+  selectedIdx = -1;
+  tblBody.querySelectorAll(".tbl-row").forEach(r => r.classList.remove("selected"));
+  urlInput.focus();
+}
+
+// 全件クリア
+clearAllBtn.addEventListener("click", async () => {
+  if (works.length === 0) return;
+  // 【3】confirm() → showConfirm()
+  const ok = await showConfirm(`${works.length}件をすべて削除しますか？`, "削除する", "キャンセル");
+  if (!ok) return;
+  works = [];
+  selectedIdx = -1;
+  exitEditMode();
+  clearForm();
+  persist();
+  renderTable(true);
+  updateJson();
+  showToast("🗑 全件削除しました", "info");
+});
+
+// ──────────────────────────────────────
+// ② キーボードショートカット
+// ──────────────────────────────────────
+document.addEventListener("keydown", e => {
+  // Ctrl+Enter → 追加 or 更新
+  if (e.ctrlKey && !e.shiftKey && e.key === "Enter") {
+    e.preventDefault();
+    editIdx === -1 ? doAdd() : updateBtn.click();
+    return;
+  }
+
+  // Ctrl+Shift+C → コピー
+  if (e.ctrlKey && e.shiftKey && e.key === "C") {
+    e.preventDefault();
+    doCopy();
+    return;
+  }
+
+  // Esc → キャンセル
+  if (e.key === "Escape") {
+    if (editIdx !== -1) { exitEditMode(); clearForm(); }
+    return;
+  }
+
+  // ↑↓ → 一覧の選択移動（フォーム外でのみ）
+  if (document.activeElement.tagName === "INPUT" ||
+      document.activeElement.tagName === "TEXTAREA" ||
+      document.activeElement.tagName === "SELECT") return;
+
+  if (e.key === "ArrowDown" && works.length > 0) {
+    e.preventDefault();
+    const next = Math.min(selectedIdx + 1, works.length - 1);
+    enterEditMode(next);
+    return;
+  }
+  if (e.key === "ArrowUp" && works.length > 0) {
+    e.preventDefault();
+    const prev = Math.max(selectedIdx - 1, 0);
+    enterEditMode(prev);
+    return;
+  }
+
+  // Delete → 選択行を削除
+  if (e.key === "Delete" && selectedIdx !== -1) {
+    e.preventDefault();
+    deleteWork(selectedIdx);
+    return;
+  }
+});
+
+// ② Enter → 次のフィールドへ移動
+const FIELD_ORDER = [urlInput, fId, fPrice, fTitle, fMaker, fImage, fCategory, fTags, fDesc, fCta];
+FIELD_ORDER.forEach((el, i) => {
+  if (el.tagName === "TEXTAREA") return; // textareaはEnterで改行させる
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.ctrlKey) {
+      e.preventDefault();
+      const next = FIELD_ORDER[i + 1];
+      if (next) next.focus();
+    }
+  });
+});
+
+// ──────────────────────────────────────
+// ──────────────────────────────────────
+// localStorage 保存・読み込み
+// ──────────────────────────────────────
+
+// 【6】debounce ユーティリティ（IME変換中の過剰保存を防ぐ）
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ① worksデータの永続化
+function persist() {
+  try {
+    const json = JSON.stringify(works);
+    // ⑥ Blob.size で実バイト数を計測（length は文字数なので多バイト文字でズレる）
+    const byteSize = new Blob([json]).size;
+    if (byteSize > 4_500_000) {
+      showToast("⚠️ データが大きくなっています。Exportで整理してください", "info");
+    }
+    localStorage.setItem("works_editor_data", json);
+  } catch (e) {
+    if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
+      showToast("⚠️ 保存容量が上限です。Exportでデータを整理してください", "err");
+    }
+    console.warn("localStorage保存失敗 (works):", e);
+  }
+}
+
+// ① ⑥ 初期読み込み（破損対策：console.warn + 空配列フォールバック）
+function loadFromLocal() {
+  try {
+    const raw = localStorage.getItem("works_editor_data");
+    if (!raw) return [];
+    const d = JSON.parse(raw);
+    if (!Array.isArray(d)) {
+      console.warn("works_editor_data が配列ではないため無視します:", d);
+      return [];
+    }
+    return d;
+  } catch (e) {
+    console.warn("works_editor_data の読み込みに失敗しました:", e);
+    return [];
+  }
+}
+
+// ③ フォーム入力のドラフト保存（【6】debounce 200ms で過剰保存を防ぐ）
+const saveDraft = debounce(_saveDraftRaw, 200);
+function _saveDraftRaw() {
+  try {
+    localStorage.setItem("works_editor_draft", JSON.stringify({
+      url:      urlInput.value,
+      id:       fId.value,
+      title:    fTitle.value,
+      maker:    fMaker.value,
+      price:    fPrice.value,
+      image:    fImage.value,
+      category: fCategory.value,
+      tags:     fTags.value,
+      desc:     fDesc.value,
+      cta:      fCta.value,
+    }));
+  } catch (e) {
+    // 【8】Quota 超過は静かに無視（ドラフトは補助機能）
+    if (e.name !== "QuotaExceededError" && e.name !== "NS_ERROR_DOM_QUOTA_REACHED") {
+      console.warn("draft保存失敗:", e);
+    }
+  }
+}
+
+// ④ ドラフト復元（ページロード時に呼ぶ）
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem("works_editor_draft");
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || typeof d !== "object") return false;
+
+    // null / undefined のフィールドはスキップ
+    if (d.url      != null) urlInput.value   = d.url;
+    if (d.id       != null) fId.value        = d.id;
+    if (d.title    != null) fTitle.value     = d.title;
+    if (d.maker    != null) fMaker.value     = d.maker;
+    if (d.price    != null) fPrice.value     = d.price;
+    if (d.image    != null) fImage.value     = d.image;
+    if (d.category != null) fCategory.value  = d.category;
+    if (d.tags     != null) fTags.value      = d.tags;
+    if (d.desc     != null) fDesc.value      = d.desc;
+    if (d.cta      != null) fCta.value       = d.cta;
+
+    // RJヒントを復元
+    if (d.id) rjHint.textContent = `✅ ${d.id}`;
+
+    return !!(d.title || d.url); // 何か入力があれば true
+  } catch (e) {
+    console.warn("draft復元失敗:", e);
+    return false;
+  }
+}
+
+// ⑤ ドラフトを削除（追加・更新確定時に呼ぶ）
+function clearDraft() {
+  localStorage.removeItem("works_editor_draft");
+}
+
+// 【3】confirm() 廃止：Promise ベースのモーダル確認
+//   使い方: const ok = await showConfirm("メッセージ");
+let _toastTimer;
+function showToast(msg, type = "ok") {
+  clearTimeout(_toastTimer);
+  toast.textContent = msg;
+  toast.className   = `toast ${type} show`;
+  _toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+}
+
+function showConfirm(msg, yesLabel = "はい", noLabel = "いいえ") {
+  return new Promise(resolve => {
+    document.getElementById("modalMsg").textContent = msg;
+    document.getElementById("modalYes").textContent = yesLabel;
+    document.getElementById("modalNo").textContent  = noLabel;
+    const overlay = document.getElementById("modalOverlay");
+    overlay.classList.add("show");
+
+    const cleanup = (result) => {
+      overlay.classList.remove("show");
+      document.getElementById("modalYes").replaceWith(document.getElementById("modalYes").cloneNode(true));
+      document.getElementById("modalNo").replaceWith(document.getElementById("modalNo").cloneNode(true));
+      resolve(result);
+    };
+
+    // 毎回新しいリスナーを設定するためcloneNode後に取り直す
+    document.getElementById("modalYes").addEventListener("click", () => cleanup(true),  { once: true });
+    document.getElementById("modalNo").addEventListener("click",  () => cleanup(false), { once: true });
+    overlay.addEventListener("click", e => { if (e.target === overlay) cleanup(false); }, { once: true });
+  });
+}
+
+// 【7】アンドゥトースト制御
+let _undoTimer = null;
+const undoToast = document.getElementById("undoToast");
+const undoMsg   = document.getElementById("undoMsg");
+const undoBtn   = document.getElementById("undoBtn");
+
+function _showUndoToast(msg) {
+  undoMsg.textContent = msg;
+  undoToast.classList.add("show");
+  clearTimeout(_undoTimer);
+  // 5秒後に自動で消す
+  _undoTimer = setTimeout(() => {
+    undoToast.classList.remove("show");
+    _undoBuffer = null;
+  }, 5000);
+}
+
+undoBtn.addEventListener("click", () => {
+  if (!_undoBuffer) return;
+  // 元の位置に戻す（末尾でなく元のインデックスへ）
+  const { work, idx } = _undoBuffer;
+  works.splice(Math.min(idx, works.length), 0, work);
+  _undoBuffer = null;
+  clearTimeout(_undoTimer);
+  undoToast.classList.remove("show");
+  persist();
+  renderTable(true);
+  updateJson();
+  showToast(`↩「${work.title}」を復元しました`, "ok");
+});
+
+// ──────────────────────────────────────
+// ユーティリティ
+// ──────────────────────────────────────
+// ⑥ タグ正規化マップ：よくある表記ゆれを正規形に統一
+const TAG_MAP = {
+  "asmr":     "ASMR",
+  "ａｓｍｒ": "ASMR",
+  "耳かき":   "耳かき",
+  "みみかき": "耳かき",
+  "ささやき": "囁き",
+  "バイノーラル": "バイノーラル",
+  "binaural": "バイノーラル",
+};
+
+function parseTags(str) {
+  return [
+    // ⑨ 重複排除（大文字小文字を無視して比較）
+    ...new Set(
+      str.split(/[,、，]+/)
+        .map(t => t.trim())
+        .filter(Boolean)
+        .map(t => {
+          // TAG_MAP に一致するものは正規形に変換（なければそのまま）
+          return TAG_MAP[t.toLowerCase()] ?? TAG_MAP[t] ?? t;
+        })
+    )
+  ];
+}
+
+// 【1】XSSエスケープ：innerHTML に埋め込む文字列は必ずこれを通す
+function esc(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// 【2】⑦ URLスキーム検証：URL コンストラクタで厳密にパース
+//   /^https?:\/\// だけだと "https://evil.com?javascript:" が通るため強化
+function safeUrl(url) {
+  if (!url) return "";
+  try {
+    const u = new URL(String(url).trim());
+    return ["http:", "https:"].includes(u.protocol) ? u.href : "";
+  } catch {
+    return ""; // パース失敗（相対URL・不正文字列など）
+  }
+}
+
+// ──────────────────────────────────────
+// 起動
+// ──────────────────────────────────────
+
+// ② works を localStorage から復元（初期化の最初に実行）
+works = loadFromLocal();
+
+buildTagChips();
+renderTable(true);
+updateJson();
+
+// ⑦ 復元通知：worksが存在した場合はトーストで通知
+if (works.length > 0) {
+  showToast(`📂 前回のデータを復元しました（${works.length}件）`, "info");
+}
+
+// ④ フォームドラフトを復元してプレビューを更新
+const draftRestored = restoreDraft();
+if (draftRestored) {
+  syncTagChips();
+  updatePreview();
+  // RJヒントをURL欄から再判定
+  const urlMatch = urlInput.value.match(/RJ\d+/i);
+  if (urlMatch) rjHint.textContent = `✅ ${urlMatch[0].toUpperCase()}`;
+}
+
+// ⑧ イベント委譲：tblBodyへのクリックを初期化時に一度だけ登録
+//    renderTable のたびに再登録しないのでメモリ効率・保守性が上がる
+tblBody.addEventListener("click", e => {
+  // ── ホバーボタン（削除・外部リンク） ──────────────
+  const actBtn = e.target.closest(".tbl-act-btn");
+  if (actBtn) {
+    e.stopPropagation();
+    const idx = Number(actBtn.dataset.idx);
+    if (actBtn.dataset.act === "del") {
+      deleteWork(idx);
+    } else if (actBtn.dataset.act === "ext") {
+      const safe = safeUrl(works[idx]?.url ?? "");
+      if (safe) window.open(safe, "_blank", "noopener,noreferrer");
+    }
+    return;
+  }
+
+  // ── 行クリック → 編集モード ────────────────────
+  const row = e.target.closest(".tbl-row");
+  if (row && !e.target.closest(".tbl-actions")) {
+    enterEditMode(Number(row.dataset.idx));
+  }
+});
+
+// 【10】一覧フィルターのイベント登録
+listFilter.addEventListener("input", () => renderTable(true));
+
+// ③ フォーム全フィールドに saveDraft を登録
+//    input / change イベントのどちらでも保存
+[urlInput, fId, fTitle, fMaker, fPrice, fImage, fTags, fDesc, fCta].forEach(el => {
+  el.addEventListener("input",  saveDraft);
+});
+fCategory.addEventListener("change", saveDraft);
+
+urlInput.focus();
+</script>
+</body>
+</html>
