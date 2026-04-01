@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>works.json エディター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;
+  --surface:#ffffff;
+  --surface2:#f8f9fc;
+  --border:#e2e6ea;
+  --border2:#d0d5dd;
+  --accent:#4a6cf7;
+  --accent2:#7c3aed;
+  --text:#1a1a2e;
+  --muted:#6c757d;
+  --red:#e05555;
+  --green:#22c55e;
+  --tag-bg:#eef2ff;
+  --tag-color:#4a6cf7;
+  --radius:10px;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-weight:400;min-height:100vh}
+
+/* HEADER */
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.app-title{font-size:1rem;font-weight:700;color:var(--accent)}
+.app-title span{color:var(--text)}
+.header-badge{font-size:.72rem;background:var(--tag-bg);color:var(--accent);border-radius:20px;padding:.2rem .8rem;font-weight:700}
+
+/* LAYOUT */
+.container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:768px){.container{grid-template-columns:1fr;padding:1rem}}
+
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.panel-head{padding:.9rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+.panel-head h2{font-size:.85rem;font-weight:700;color:var(--text)}
+.panel-icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.panel-icon.blue{background:#eef2ff;color:var(--accent)}
+.panel-icon.purple{background:#f3f0ff;color:var(--accent2)}
+.panel-icon.green{background:#f0fdf4;color:var(--green)}
+.panel-body{padding:1.4rem}
+
+/* FORM */
+.form-group{margin-bottom:1.1rem}
+.form-label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:.4rem;letter-spacing:.03em}
+.form-label .required{color:var(--red);margin-left:2px}
+.form-input,.form-textarea,.form-select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;padding:.6rem .9rem;font-family:'Noto Sans JP',sans-serif;font-size:.88rem;color:var(--text);transition:border-color .2s,box-shadow .2s;outline:none}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,108,247,.1)}
+.form-textarea{resize:vertical;min-height:70px;line-height:1.7}
+.form-input.url-input{font-family:'JetBrains Mono',monospace;font-size:.82rem;background:#f8f9ff;border-color:#c8d4ff}
+.form-input.url-input:focus{border-color:var(--accent)}
+
+/* URL SECTION */
+.url-section{background:#f8f9ff;border:1.5px solid #c8d4ff;border-radius:var(--radius);padding:1.2rem;margin-bottom:1.4rem}
+.url-section-label{font-size:.75rem;font-weight:700;color:var(--accent);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+.url-parse-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:.65rem;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.6rem;transition:background .2s,transform .1s}
+.url-parse-btn:hover{background:var(--accent2)}
+.url-parse-btn:active{transform:scale(.98)}
+
+/* TAGS */
+.tags-input-wrap{border:1.5px solid var(--border);border-radius:7px;padding:.5rem;display:flex;flex-wrap:wrap;gap:.4rem;background:var(--surface2);cursor:text;transition:border-color .2s}
+.tags-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,108,247,.1)}
+.tag-item{background:var(--tag-bg);color:var(--tag-color);border-radius:5px;padding:.15rem .6rem;font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:.3rem;cursor:default}
+.tag-remove{cursor:pointer;opacity:.6;font-size:.9rem;line-height:1}
+.tag-remove:hover{opacity:1;color:var(--red)}
+.tags-input{border:none;background:transparent;outline:none;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;color:var(--text);min-width:80px;flex:1}
+.tag-suggestions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.tag-suggest-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:.2rem .6rem;font-size:.75rem;color:var(--muted);cursor:pointer;transition:all .15s}
+.tag-suggest-item:hover{background:var(--tag-bg);color:var(--tag-color);border-color:var(--accent)}
+
+/* GENERATE BTNS */
+.gen-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.35rem .8rem;font-size:.75rem;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s}
+.gen-btn:hover{background:var(--tag-bg);color:var(--accent);border-color:var(--accent)}
+
+/* ADD BTN */
+.add-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:.8rem;font-family:'Noto Sans JP',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;margin-top:.5rem}
+.add-btn:hover{opacity:.92}
+.add-btn:active{transform:scale(.99)}
+
+/* PREVIEW CARD */
+.preview-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface);transition:box-shadow .2s}
+.preview-card:hover{box-shadow:0 4px 16px rgba(74,108,247,.1)}
+.preview-thumb{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#eef2ff,#f3f0ff);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem;overflow:hidden}
+.preview-thumb img{width:100%;height:100%;object-fit:cover}
+.preview-body{padding:1rem}
+.preview-cat{font-size:.7rem;font-weight:700;color:var(--accent);margin-bottom:.3rem}
+.preview-title{font-size:.9rem;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:.4rem}
+.preview-maker{font-size:.75rem;color:var(--muted);margin-bottom:.5rem}
+.preview-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem}
+.preview-tag{background:var(--tag-bg);color:var(--tag-color);border-radius:4px;padding:.1rem .5rem;font-size:.7rem;font-weight:700}
+.preview-desc{font-size:.78rem;color:var(--muted);line-height:1.7;margin-bottom:.8rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.preview-cta{display:block;text-align:center;background:var(--accent);color:#fff;border-radius:6px;padding:.5rem;font-size:.8rem;font-weight:700;text-decoration:none}
+.preview-empty{padding:3rem 2rem;text-align:center;color:var(--muted);font-size:.85rem}
+.preview-empty .empty-icon{font-size:2.5rem;margin-bottom:.8rem;opacity:.4}
+
+/* JSON OUTPUT */
+.json-output{background:#1e1e2e;border-radius:var(--radius);padding:1.2rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#cdd6f4;line-height:1.7;overflow-x:auto;white-space:pre;max-height:300px;overflow-y:auto}
+.copy-btn{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.6rem;font-family:'Noto Sans JP',sans-serif;font-size:.82rem;font-weight:700;color:var(--text);cursor:pointer;margin-top:.8rem;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.copy-btn:hover{background:var(--tag-bg);color:var(--accent);border-color:var(--accent)}
+.copy-btn.copied{background:#f0fdf4;color:var(--green);border-color:var(--green)}
+
+/* WORKS LIST */
+.works-list{display:flex;flex-direction:column;gap:.6rem;max-height:400px;overflow-y:auto}
+.work-item{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border:1px solid var(--border);border-radius:8px;background:var(--surface2)}
+.work-item-thumb{width:48px;height:48px;object-fit:cover;border-radius:5px;background:#eef2ff;flex-shrink:0}
+.work-item-info{flex:1;min-width:0}
+.work-item-title{font-size:.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.work-item-meta{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.work-delete{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:.2rem;transition:color .15s;flex-shrink:0}
+.work-delete:hover{color:var(--red)}
+.works-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.82rem}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e1e2e;color:#cdd6f4;padding:.8rem 1.4rem;border-radius:8px;font-size:.82rem;font-weight:700;z-index:1000;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* FULL WIDTH PANEL */
+.full-panel{grid-column:1/-1}
+
+/* STATUS */
+.status-bar{font-size:.75rem;color:var(--muted);padding:.5rem 0;display:flex;align-items:center;gap:.5rem}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+/* ID BADGE */
+.id-badge{display:inline-block;background:#fff8e6;border:1px solid #fbbf24;border-radius:5px;padding:.15rem .6rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#92400e;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">works.json <span>エディター</span></div>
+  <div class="header-badge">ASMR Finder ツール</div>
+</div>
+
+<div class="container">
+
+  <!-- LEFT: フォーム -->
+  <div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon blue">＋</div>
+        <h2>作品を追加</h2>
+      </div>
+      <div class="panel-body">
+
+        <!-- URL入力セクション -->
+        <div class="url-section">
+          <div class="url-section-label">🔗 DLsite 作品URLを貼り付け</div>
+          <input type="url" id="dlsite-url" class="form-input url-input" placeholder="https://www.dlsite.com/maniax/work/=/product_id/RJ...">
+          <button class="url-parse-btn" onclick="parseURL()">▶ URLから自動入力</button>
+        </div>
+
+        <!-- タイトル -->
+        <div class="form-group">
+          <label class="form-label">タイトル <span class="required">*</span></label>
+          <input type="text" id="f-title" class="form-input" placeholder="作品タイトル" oninput="updatePreview()">
+        </div>
+
+        <!-- サークル名 -->
+        <div class="form-group">
+          <label class="form-label">サークル名</label>
+          <input type="text" id="f-maker" class="form-input" placeholder="サークル・制作者名" oninput="updatePreview()">
+        </div>
+
+        <!-- 価格 -->
+        <div class="form-group">
+          <label class="form-label">価格（円）</label>
+          <input type="number" id="f-price" class="form-input" placeholder="例: 880" oninput="updatePreview()">
+        </div>
+
+        <!-- 画像URL -->
+        <div class="form-group">
+          <label class="form-label">サムネイル画像URL</label>
+          <input type="url" id="f-image" class="form-input url-input" placeholder="https://img.dlsite.jp/..." oninput="updatePreview()">
+        </div>
+
+        <!-- カテゴリ -->
+        <div class="form-group">
+          <label class="form-label">カテゴリ</label>
+          <select id="f-category" class="form-select" onchange="updatePreview()">
+            <option value="ASMR">ASMR</option>
+            <option value="耳かき">耳かき</option>
+            <option value="囁き">囁き</option>
+            <option value="睡眠">睡眠</option>
+            <option value="催眠">催眠</option>
+            <option value="癒し">癒し</option>
+            <option value="シチュエーション">シチュエーション</option>
+            <option value="バイノーラル">バイノーラル</option>
+          </select>
+        </div>
+
+        <!-- タグ -->
+        <div class="form-group">
+          <label class="form-label">タグ <span style="font-weight:400;color:var(--muted)">（Enterで追加）</span></label>
+          <div class="tags-input-wrap" id="tags-wrap" onclick="document.getElementById('tag-input').focus()">
+            <input type="text" id="tag-input" class="tags-input" placeholder="タグを入力..." onkeydown="handleTagInput(event)">
+          </div>
+          <div class="tag-suggestions" id="tag-suggestions">
+            <!-- 候補タグ -->
+          </div>
+        </div>
+
+        <!-- 説明文 -->
+        <div class="form-group">
+          <label class="form-label">説明文 <button class="gen-btn" onclick="genDesc()" style="margin-left:.5rem">自動生成</button></label>
+          <textarea id="f-desc" class="form-textarea" placeholder="作品の説明文" oninput="updatePreview()"></textarea>
+        </div>
+
+        <!-- CTA -->
+        <div class="form-group">
+          <label class="form-label">CTA（ボタンテキスト） <button class="gen-btn" onclick="genCTA()" style="margin-left:.5rem">自動生成</button></label>
+          <input type="text" id="f-cta" class="form-input" placeholder="例: この音声を聴いてみる →" oninput="updatePreview()">
+        </div>
+
+        <button class="add-btn" onclick="addWork()">＋ リストに追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: プレビュー + リスト -->
+  <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+    <!-- カードプレビュー -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon purple">👁</div>
+        <h2>カードプレビュー</h2>
+      </div>
+      <div class="panel-body" style="padding:1rem">
+        <div id="preview-area">
+          <div class="preview-empty">
+            <div class="empty-icon">🎧</div>
+            <div>URLを貼り付けるか、入力フォームを埋めると<br>プレビューが表示されます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 追加済みリスト -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon green">📋</div>
+        <h2>追加済み作品 <span id="work-count" style="font-size:.75rem;color:var(--muted);font-weight:400">（0件）</span></h2>
+      </div>
+      <div class="panel-body" style="padding:1rem">
+        <div class="works-list" id="works-list">
+          <div class="works-empty">まだ作品がありません</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FULL WIDTH: JSON出力 -->
+  <div class="panel full-panel">
+    <div class="panel-head">
+      <div class="panel-icon blue">{ }</div>
+      <h2>works.json 出力</h2>
+    </div>
+    <div class="panel-body">
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        <span id="json-status">作品を追加するとJSONが生成されます</span>
+      </div>
+      <pre class="json-output" id="json-output">[]</pre>
+      <button class="copy-btn" id="copy-btn" onclick="copyJSON()">
+        📋 JSONをコピーする
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================
+// STATE
+// =============================================
+let works = [];
+let currentTags = [];
+
+const TAG_SUGGESTIONS = [
+  'ASMR','健全','耳かき','耳舐め','耳ふー','囁き','ささやき',
+  'バイノーラル','ダミヘ','睡眠','安眠','催眠','癒し',
+  'リラックス','おやすみ','添い寝','シチュエーション',
+  '甘え','ドS','ドM','お姉さん','彼女','妹','年上',
+];
+
+// =============================================
+// URL PARSE
+// =============================================
+function parseURL() {
+  const url = document.getElementById('dlsite-url').value.trim();
+  if (!url) { showToast('URLを入力してください'); return; }
+
+  const rjMatch = url.match(/product_id\/(RJ\d+)/i) || url.match(/\/(RJ\d+)/i);
+  if (!rjMatch) { showToast('DLsiteのURLを入力してください（RJコードが必要です）'); return; }
+
+  const rjCode = rjMatch[1];
+  const rjNum  = parseInt(rjCode.replace('RJ',''));
+  const rjDir  = String(Math.floor(rjNum / 1000)).padStart(rjCode.length > 8 ? 8 : 6, '0') + '000';
+
+  // サムネイルURLを自動生成
+  const thumbUrl = `https://img.dlsite.jp/modpub/images2/work/doujin/${rjDir}/${rjCode}_img_main.jpg`;
+
+  document.getElementById('f-image').value = thumbUrl;
+
+  // タイトルフィールドにフォーカス
+  document.getElementById('f-title').focus();
+  showToast(`✅ RJコード「${rjCode}」を検出しました！タイトルなどを入力してください`);
+  updatePreview();
+}
+
+function extractRJCode(url) {
+  const m = url.match(/product_id\/(RJ\d+)/i) || url.match(/\/(RJ\d+)/i);
+  return m ? m[1] : null;
+}
+
+// =============================================
+// TAG INPUT
+// =============================================
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim();
+    if (val) addTag(val);
+    e.target.value = '';
+    updatePreview();
+  }
+  if (e.key === 'Backspace' && !e.target.value && currentTags.length) {
+    currentTags.pop();
+    renderTags();
+    updatePreview();
+  }
+}
+
+function addTag(tag) {
+  tag = tag.replace(/,/g,'').trim();
+  if (tag && !currentTags.includes(tag)) {
+    currentTags.push(tag);
+    renderTags();
+  }
+}
+
+function removeTag(idx) {
+  currentTags.splice(idx, 1);
+  renderTags();
+  updatePreview();
+}
+
+function renderTags() {
+  const wrap = document.getElementById('tags-wrap');
+  const input = document.getElementById('tag-input');
+  wrap.innerHTML = '';
+  currentTags.forEach((t, i) => {
+    const el = document.createElement('span');
+    el.className = 'tag-item';
+    el.innerHTML = `${t}<span class="tag-remove" onclick="removeTag(${i})">×</span>`;
+    wrap.appendChild(el);
+  });
+  wrap.appendChild(input);
+
+  // 候補タグ更新
+  const sugg = document.getElementById('tag-suggestions');
+  const remaining = TAG_SUGGESTIONS.filter(t => !currentTags.includes(t)).slice(0, 10);
+  sugg.innerHTML = remaining.map(t =>
+    `<span class="tag-suggest-item" onclick="addTag('${t}');updatePreview()">${t}</span>`
+  ).join('');
+}
+
+// =============================================
+// AUTO GENERATE
+// =============================================
+function genDesc() {
+  const title = document.getElementById('f-title').value;
+  const cat   = document.getElementById('f-category').value;
+  const maker = document.getElementById('f-maker').value;
+  if (!title && !cat) { showToast('タイトルかカテゴリを入力してください'); return; }
+  const desc = `${title ? title + '。' : ''}${cat}系のASMR作品${maker ? '（' + maker + '）' : ''}です。心地よいサウンドで癒されてください。`;
+  document.getElementById('f-desc').value = desc;
+  updatePreview();
+}
+
+function genCTA() {
+  const cat = document.getElementById('f-category').value;
+  const map = {
+    '耳かき':         '耳かき音声を聴いてみる →',
+    '囁き':           'ひそひそ声に癒されてみる →',
+    '睡眠':           '眠れる音声を聴いてみる →',
+    '催眠':           '催眠音声を体験してみる →',
+    '癒し':           '癒し音声を聴いてみる →',
+    'バイノーラル':   'バイノーラル音声を聴いてみる →',
+    'シチュエーション':'このシチュを体験してみる →',
+    'ASMR':           'この作品を聴いてみる →',
+  };
+  document.getElementById('f-cta').value = map[cat] || 'この作品を聴いてみる →';
+  updatePreview();
+}
+
+// =============================================
+// PREVIEW
+// =============================================
+function updatePreview() {
+  const title = document.getElementById('f-title').value;
+  const maker = document.getElementById('f-maker').value;
+  const cat   = document.getElementById('f-category').value;
+  const img   = document.getElementById('f-image').value;
+  const desc  = document.getElementById('f-desc').value;
+  const cta   = document.getElementById('f-cta').value || 'この作品を聴いてみる →';
+
+  if (!title && !img) {
+    document.getElementById('preview-area').innerHTML = `
+      <div class="preview-empty">
+        <div class="empty-icon">🎧</div>
+        <div>URLを貼り付けるか、入力フォームを埋めると<br>プレビューが表示されます</div>
+      </div>`;
+    return;
+  }
+
+  const tagsHTML = currentTags.map(t => `<span class="preview-tag">${t}</span>`).join('');
+  const thumbHTML = img
+    ? `<img src="${img}" alt="${title}" onerror="this.parentElement.innerHTML='<span>画像を読み込めませんでした</span>'">`
+    : `<span>画像なし</span>`;
+
+  document.getElementById('preview-area').innerHTML = `
+    <div class="preview-card">
+      <div class="preview-thumb">${thumbHTML}</div>
+      <div class="preview-body">
+        <div class="preview-cat">${cat}</div>
+        <div class="preview-title">${title || '（タイトル未入力）'}</div>
+        ${maker ? `<div class="preview-maker">${maker}</div>` : ''}
+        ${tagsHTML ? `<div class="preview-tags">${tagsHTML}</div>` : ''}
+        ${desc ? `<div class="preview-desc">${desc}</div>` : ''}
+        <span class="preview-cta">${cta}</span>
+      </div>
+    </div>`;
+}
+
+// =============================================
+// ADD WORK
+// =============================================
+function addWork() {
+  const url   = document.getElementById('dlsite-url').value.trim();
+  const title = document.getElementById('f-title').value.trim();
+  const maker = document.getElementById('f-maker').value.trim();
+  const price = document.getElementById('f-price').value.trim();
+  const img   = document.getElementById('f-image').value.trim();
+  const cat   = document.getElementById('f-category').value;
+  const desc  = document.getElementById('f-desc').value.trim();
+  const cta   = document.getElementById('f-cta').value.trim() || 'この作品を聴いてみる →';
+
+  if (!title) { showToast('⚠ タイトルを入力してください'); return; }
+  if (!url)   { showToast('⚠ URLを入力してください'); return; }
+
+  const rjCode = extractRJCode(url);
+  const id = rjCode || `work_${Date.now()}`;
+
+  if (works.find(w => w.id === id)) {
+    showToast('⚠ この作品はすでに追加されています');
+    return;
+  }
+
+  const work = {
+    id,
+    title,
+    maker: maker || undefined,
+    price: price ? parseInt(price) : undefined,
+    url,
+    image: img || undefined,
+    category: cat,
+    tags: [...currentTags],
+    description: desc || `${title}。${cat}系のASMR作品です。`,
+    cta,
+    createdAt: new Date().toISOString(),
+  };
+
+  // undefinedを除去
+  Object.keys(work).forEach(k => work[k] === undefined && delete work[k]);
+
+  works.push(work);
+  renderWorksList();
+  renderJSON();
+  clearForm();
+  showToast(`✅「${title}」を追加しました！`);
+}
+
+// =============================================
+// RENDER WORKS LIST
+// =============================================
+function renderWorksList() {
+  const list = document.getElementById('works-list');
+  document.getElementById('work-count').textContent = `（${works.length}件）`;
+
+  if (!works.length) {
+    list.innerHTML = '<div class="works-empty">まだ作品がありません</div>';
+    return;
+  }
+
+  list.innerHTML = works.map((w, i) => `
+    <div class="work-item">
+      ${w.image
+        ? `<img class="work-item-thumb" src="${w.image}" alt="${w.title}" onerror="this.style.background='#eef2ff'">`
+        : `<div class="work-item-thumb" style="background:#eef2ff"></div>`}
+      <div class="work-item-info">
+        <div class="work-item-title">${w.title}</div>
+        <div class="work-item-meta">
+          <span class="id-badge">${w.id}</span>
+          ${w.maker ? ' · ' + w.maker : ''}
+          ${w.price ? ' · ¥' + w.price.toLocaleString() : ''}
+        </div>
+      </div>
+      <button class="work-delete" onclick="deleteWork(${i})" title="削除">✕</button>
+    </div>
+  `).join('');
+}
+
+function deleteWork(idx) {
+  const title = works[idx].title;
+  works.splice(idx, 1);
+  renderWorksList();
+  renderJSON();
+  showToast(`🗑「${title}」を削除しました`);
+}
+
+// =============================================
+// JSON OUTPUT
+// =============================================
+function renderJSON() {
+  const out = document.getElementById('json-output');
+  const status = document.getElementById('json-status');
+
+  if (!works.length) {
+    out.textContent = '[]';
+    status.textContent = '作品を追加するとJSONが生成されます';
+    return;
+  }
+
+  // カラー付きJSON（擬似）
+  const json = JSON.stringify(works, null, 2);
+  out.textContent = json;
+  status.textContent = `${works.length}件の作品データが準備できました`;
+}
+
+function copyJSON() {
+  if (!works.length) { showToast('⚠ 作品を追加してからコピーしてください'); return; }
+  const json = JSON.stringify(works, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '📋 JSONをコピーする';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// =============================================
+// CLEAR FORM
+// =============================================
+function clearForm() {
+  document.getElementById('dlsite-url').value = '';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-maker').value = '';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-category').value = 'ASMR';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-cta').value = '';
+  currentTags = [];
+  renderTags();
+  updatePreview();
+}
+
+// =============================================
+// TOAST
+// =============================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// =============================================
+// INIT
+// =============================================
+renderTags();
+renderJSON();
+updatePreview();
+</script>
+</body>
+</html>
