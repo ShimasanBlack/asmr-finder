@@ -2029,7 +2029,30 @@
       try {
         // ② works.json を取得（await で完了を待つ）
         const res = await fetch("data/works.json");
-        works = await res.json(); // ③ 配列として works に代入
+        works = await res.json();
+
+        // タグからhealing・eroを自動計算（works.jsonにフィールドがない場合）
+        const HEAL_TAGS = {
+          "睡眠導入": 3, "耳かき": 2, "囁き": 2, "添い寝": 2,
+          "自然音": 2, "環境音": 2, "雨音": 2, "マッサージ": 1,
+          "甘やかし": 1, "密着": 1, "いちゃいちゃ": 1, "バイノーラル": 1,
+          "ヘッドスパ": 1, "甘々": 2, "長時間": 1,
+        };
+        const ERO_TAGS = {
+          "R18": 3, "手コキ": 2, "フェラチオ": 2, "パイズリ": 2,
+          "中出し": 2, "乳首責め": 2, "オナサポ": 2, "耳舐め": 1,
+          "催眠": 1, "ほんのりR18": 1,
+        };
+        works = works.map(w => {
+          if (w.healing != null && w.ero != null) return w; // 既存データはそのまま
+          const tags = w.tags ?? [];
+          const healRaw = tags.reduce((s, t) => s + (HEAL_TAGS[t] ?? 0), 0);
+          const eroRaw  = tags.reduce((s, t) => s + (ERO_TAGS[t]  ?? 0), 0);
+          // 0〜5の範囲にスケール
+          const healing = Math.min(5, Math.round(healRaw / 2));
+          const ero     = Math.min(5, Math.round(eroRaw  / 2));
+          return { ...w, healing, ero };
+        });
 
       } catch (err) {
         console.error("works.json の読み込みに失敗しました:", err);
