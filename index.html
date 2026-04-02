@@ -1823,7 +1823,10 @@
       clickMap[workId] = (clickMap[workId] ?? 0) + 1;
       saveClicks(clickMap);
 
-      // ── B) GA4 にカスタムイベントを送信 ──────────────
+      // ── B) 閲覧履歴に追加 ────────────────────────────
+      addHistory(workId);
+
+      // ── C) GA4 にカスタムイベントを送信 ──────────────
       // GA_MEASUREMENT_ID が設定されていれば自動で送信される。
       // GA管理画面の「イベント」タブで "dlsite_click" として確認できる。
       if (typeof gtag === "function") {
