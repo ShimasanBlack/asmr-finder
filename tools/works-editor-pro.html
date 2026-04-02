@@ -583,7 +583,8 @@ select option { background: var(--surface2); }
     <div class="hdr-btn-group">
       <button class="btn btn-ghost" id="exportBtn" title="JSONをファイルに保存">⬇ Export</button>
       <button class="btn btn-ghost" id="importBtn" title="JSONファイルを読み込む">⬆ Import</button>
-      <button class="btn btn-ghost" id="openJsonBtn" title="works.jsonを開くコマンドをコピー">📂 works.json を開く</button>
+      <button class="btn btn-ghost" id="openJsonBtn" title="works.jsonをpushするコマンドをコピー">📤 works.json をpush</button>
+      <button class="btn btn-ghost" id="openFileBtn" title="works.jsonをメモ帳で開くコマンドをコピー">📂 works.json を開く</button>
       <input type="file" id="importFile" accept=".json" />
       <button class="btn btn-red"   id="clearAllBtn" title="全件削除">🗑 全消去</button>
     </div>
@@ -2061,8 +2062,8 @@ exportBtn.addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(works, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  // 【9】時刻まで含めて同日の上書きを防ぐ（例: works_2026-04-01_09-30.json）
-  a.download = `works_${new Date().toISOString().slice(0,16).replace("T","_").replace(":","-")}.json`;
+  // ファイル名を works.json に固定
+  a.download = "works.json";
   a.click();
   URL.revokeObjectURL(a.href);
   showToast("⬇ エクスポートしました", "ok");
@@ -2618,10 +2619,17 @@ if (draftRestored) {
 
 // 📂 works.json を開くコマンドをコピー
 document.getElementById("openJsonBtn").addEventListener("click", async () => {
-  const cmd = [
-    "cd /c/Users/seiya/Documents/asmr-finder",
-    "notepad data/works.json",
-  ].join(" && ");
+  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && git add data/works.json && git commit -m \"feat: works.json更新\" && git push origin main";
+  try {
+    await navigator.clipboard.writeText(cmd);
+    showToast("📂 pushコマンドをコピーしました。Git Bashに貼り付けてください", "ok");
+  } catch {
+    showToast("❌ コピーに失敗しました", "err");
+  }
+});
+
+document.getElementById("openFileBtn").addEventListener("click", async () => {
+  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && notepad data/works.json";
   try {
     await navigator.clipboard.writeText(cmd);
     showToast("📂 コマンドをコピーしました。Git Bashに貼り付けてください", "ok");
@@ -2629,8 +2637,6 @@ document.getElementById("openJsonBtn").addEventListener("click", async () => {
     showToast("❌ コピーに失敗しました", "err");
   }
 });
-
-// 🔄 説明文をタグから再生成
 document.getElementById("regenDescBtn").addEventListener("click", () => {
   const tags  = parseTags(fTags.value);
   const title = fTitle.value.trim();
