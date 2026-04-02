@@ -1345,7 +1345,6 @@
     const resultCountEl = document.getElementById("resultCount");
 
     // 現在選択中のタグ（null = すべて表示）
-    let activeTag = null;
 
     // ③ 現在のソート順（"recommend" = おすすめ順 / "newest" = 新着順）
     let currentSort = "recommend";
@@ -1377,10 +1376,15 @@
         const badge = document.createElement("span");
         badge.className = "kw-badge";
         badge.innerHTML = `${kw}<button class="kw-badge-remove" title="${kw}を削除">×</button>`;
-        // ×ボタンでそのワードだけ削除
         badge.querySelector(".kw-badge-remove").addEventListener("click", () => {
           searchInput.value = getKeywords().filter(k => k !== kw).join(" ");
-          renderBadges(getKeywords());
+          const kws = getKeywords();
+          renderBadges(kws);
+          // タグボタンのアクティブ状態を同期
+          document.querySelectorAll(".tag-btn").forEach(btn => {
+            if (btn.textContent === "すべて") btn.classList.toggle("active", kws.length === 0);
+            else btn.classList.toggle("active", kws.includes(btn.textContent));
+          });
           renderCards();
         });
         badgesEl.appendChild(badge);
@@ -1404,7 +1408,7 @@
       const keywords = getKeywords();
       const isOrMode = modeToggle.checked;
 
-      // 絞り込み（① お気に入りフィルター対応）
+      // 絞り込み
       const hideR18 = !showR18;
       const filtered = works.filter(work => {
         // R18非表示（デフォルト）
@@ -1412,8 +1416,7 @@
         // ① お気に入りフィルターONのときはお気に入りのみ表示
         if (favFilterOn && !favIds.has(work.id)) return false;
 
-        const tagMatch = activeTag ? work.tags.includes(activeTag) : true;
-        if (keywords.length === 0) return tagMatch;
+        if (keywords.length === 0) return true;
 
         const hits = (kw) => {
           const q = kw.toLowerCase();
@@ -1424,11 +1427,9 @@
           );
         };
 
-        const kwMatch = isOrMode
+        return isOrMode
           ? keywords.some(kw => hits(kw))
           : keywords.every(kw => hits(kw));
-
-        return tagMatch && kwMatch;
       });
 
       // ① ソート
@@ -1581,7 +1582,7 @@
 
       // ③ タグHTMLを生成（クリックで検索できるように data-tag 属性を付与）
       const tagsHtml = work.tags.map(t => {
-        const isActive = t === activeTag;
+        const isActive = getKeywords().includes(t);
         return `<span class="card-tag${isActive ? ' tag-active' : ''}" data-tag="${t}">${t}</span>`;
       }).join("");
 
@@ -1622,24 +1623,20 @@
       // ③ タグクリックで検索絞り込み
       card.querySelectorAll(".card-tag").forEach(tagEl => {
         tagEl.addEventListener("click", (e) => {
-          // カードへの遷移イベントより先に処理
           e.stopPropagation();
           const tag = tagEl.dataset.tag;
-
-          if (activeTag === tag) {
-            // 同じタグを再クリック → 解除
-            activeTag = null;
-            tagFilterEl.querySelectorAll(".tag-btn")
-              .forEach(b => b.classList.remove("active"));
-            tagFilterEl.querySelector(".tag-btn")?.classList.add("active"); // 「すべて」を選択
+          const current = getKeywords();
+          if (current.includes(tag)) {
+            searchInput.value = current.filter(k => k !== tag).join(" ");
           } else {
-            // 別のタグをクリック → そのタグで絞り込み
-            activeTag = tag;
-            // ヘッダーのタグボタンも連動して更新
-            tagFilterEl.querySelectorAll(".tag-btn").forEach(b => {
-              b.classList.toggle("active", b.textContent === tag);
-            });
+            searchInput.value = [...current, tag].join(" ");
           }
+          const kws = getKeywords();
+          renderBadges(kws);
+          document.querySelectorAll(".tag-btn").forEach(btn => {
+            if (btn.textContent === "すべて") btn.classList.toggle("active", kws.length === 0);
+            else btn.classList.toggle("active", kws.includes(btn.textContent));
+          });
           renderCards();
         });
       });
@@ -1846,10 +1843,11 @@
                 <span class="pickup-score-label">癒し度</span>
                 <span class="pickup-score-stars">${healStars}</span>
               </div>
+              ${(top.ero ?? 0) > 0 && showR18 ? `
               <div class="pickup-score-item">
                 <span class="pickup-score-label">抜き度</span>
                 <span class="pickup-score-stars">${eroStars}</span>
-              </div>
+              </div>` : ""}
             </div>
             <a class="pickup-btn" href="${top.url}" target="_blank" rel="noopener noreferrer">
               🎧 今すぐDLsiteで聴く
@@ -2092,9 +2090,9 @@
       allBtn.className = "tag-btn active";
       allBtn.textContent = "すべて";
       allBtn.addEventListener("click", () => {
-        activeTag = null;
-        tagFilterEl.querySelectorAll(".tag-btn")
-          .forEach(b => b.classList.remove("active"));
+        searchInput.value = "";
+        renderBadges([]);
+        tagFilterEl.querySelectorAll(".tag-btn").forEach(b => b.classList.remove("active"));
         allBtn.classList.add("active");
         renderCards();
       });
@@ -2107,10 +2105,21 @@
         btn.className = "tag-btn" + (R18_TAGS.has(tag) ? " tag-btn-r18" : "");
         btn.textContent = tag;
         btn.addEventListener("click", () => {
-          activeTag = tag;
-          tagFilterEl.querySelectorAll(".tag-btn")
-            .forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
+          const current = getKeywords();
+          if (current.includes(tag)) {
+            // すでに検索欄にあれば削除
+            searchInput.value = current.filter(k => k !== tag).join(" ");
+            btn.classList.remove("active");
+          } else {
+            // 検索欄に追加
+            searchInput.value = [...current, tag].join(" ");
+            btn.classList.add("active");
+          }
+          // 「すべて」ボタンの状態を更新
+          const allBtnEl = tagFilterEl.querySelector(".tag-btn:first-child");
+          if (getKeywords().length === 0) allBtnEl?.classList.add("active");
+          else allBtnEl?.classList.remove("active");
+          renderBadges(getKeywords());
           renderCards();
         });
         tagFilterEl.appendChild(btn);
@@ -2120,7 +2129,16 @@
     // 検索イベントをまとめて登録
     function setupSearch() {
       searchInput.addEventListener("input", () => {
-        renderBadges(getKeywords());
+        const kws = getKeywords();
+        renderBadges(kws);
+        // タグボタンのアクティブ状態を検索欄と同期
+        document.querySelectorAll(".tag-btn").forEach(btn => {
+          if (btn.textContent === "すべて") {
+            btn.classList.toggle("active", kws.length === 0);
+          } else {
+            btn.classList.toggle("active", kws.includes(btn.textContent));
+          }
+        });
         renderCards();
       });
 
@@ -2229,9 +2247,10 @@
           r18StatusBadge.classList.remove("r18-on");
           r18ShowBtn.textContent = "🔞 大人向け作品も表示する";
           // R18タグで絞り込み中なら解除
-          if (activeTag && ["R18","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","耳舐め","ほんのりR18"].includes(activeTag)) {
-            activeTag = null;
-          }
+          const r18TagSet = new Set(["R18","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","耳舐め","ほんのりR18"]);
+          const kws = getKeywords().filter(k => !r18TagSet.has(k));
+          searchInput.value = kws.join(" ");
+          renderBadges(kws);
         }
         // ランキングも切り替え
         const activeRankTab = document.querySelector(".ranking-tab-btn.active");
