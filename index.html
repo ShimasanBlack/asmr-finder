@@ -369,6 +369,22 @@
       color: var(--accent2);
     }
 
+    /* ページネーション */
+    .pagination {
+      display: flex; justify-content: center; align-items: center;
+      gap: 6px; margin: 32px 0 16px; flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 36px; height: 36px; padding: 0 10px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted);
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      transition: all .15s;
+    }
+    .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .page-btn:disabled { opacity: 0.3; cursor: default; }
+
     /* 「見つかりません」表示 */
     .no-results {
       text-align: center;
@@ -1192,6 +1208,12 @@
   <!-- ===== ② 「迷ったらこれ」ピックアップ（JSで動的に生成） ===== -->
   <section class="pickup-section" id="pickupSection" style="display:none"></section>
 
+  <!-- DLsite ランキングブログパーツ -->
+  <div style="margin: 24px 0;">
+    <p style="font-size:.75rem;color:var(--muted);margin-bottom:8px;text-align:right;">Powered by DLsite</p>
+    <script type="text/javascript">blogparts={"base":"https://www.dlsite.com/","type":"ranking","site":"home","query":{"period":"year","options":[null,"-MEN"]},"title":"ランキング","display":"horizontal","detail":"1","column":"h","image":"medium","count":"5","wrapper":"0","autorotate":false,"aid":"ShimasanBlack"}</script><script type="text/javascript" src="https://www.dlsite.com/js/blogparts.js" charset="UTF-8"></script>
+  </div>
+
   <!-- ===== 総合ランキング（JSで動的に生成） ===== -->
   <section class="ranking-section" id="rankingSection">
     <div class="ranking-header">
@@ -1290,6 +1312,9 @@
 
     <!-- 作品カード一覧（JSで動的生成） -->
     <div class="card-grid" id="cardGrid"></div>
+
+    <!-- ページネーション -->
+    <div class="pagination" id="pagination"></div>
   </main>
 
   <!-- ===== ③ 最近見た作品（JSで動的に生成） ===== -->
@@ -1417,6 +1442,9 @@
     //    works 配列を読んでフィルタリングする
     //    ─ ここが「検索のコア」 ─
     // ==============================================
+    const ITEMS_PER_PAGE = 20;
+    let currentPage = 1;
+
     function renderCards() {
       const keywords = getKeywords();
       const isOrMode = modeToggle.checked;
@@ -1424,9 +1452,7 @@
       // 絞り込み
       const hideR18 = !showR18;
       const filtered = works.filter(work => {
-        // R18非表示（デフォルト）
         if (hideR18 && work.tags?.includes("R18")) return false;
-        // ① お気に入りフィルターONのときはお気に入りのみ表示
         if (favFilterOn && !favIds.has(work.id)) return false;
 
         if (keywords.length === 0) return true;
@@ -1445,16 +1471,11 @@
           : keywords.every(kw => hits(kw));
       });
 
-      // ① ソート
-      //    "recommend" → healing + ero の合計の高い順
-      //    "popular"   → クリック数の多い順（データ駆動）
-      //    "newest"    → createdAt の新しい順
+      // ソート
       const sorted = [...filtered].sort((a, b) => {
         if (currentSort === "popular") {
-          // クリック数の多い順
           const diff = getClickCount(b.id) - getClickCount(a.id);
           if (diff !== 0) return diff;
-          // クリック数が同数の場合は価格の高い順（高価格＝高品質の目安）
           return (Number(b.price) || 0) - (Number(a.price) || 0);
         }
         if (currentSort === "newest") {
@@ -1462,7 +1483,6 @@
           const db = b.createdAt ?? "";
           return db.localeCompare(da);
         }
-        // デフォルト：おすすめ順
         const scoreA = (a.healing ?? 0) + (a.ero ?? 0);
         const scoreB = (b.healing ?? 0) + (b.ero ?? 0);
         return scoreB - scoreA;
@@ -1471,17 +1491,56 @@
       // 件数表示
       const modeLabel = keywords.length >= 2 ? `（${isOrMode ? "OR" : "AND"}検索）` : "";
       resultCountEl.textContent = `${sorted.length} 件${modeLabel}`;
-
       noResultsEl.classList.toggle("show", sorted.length === 0);
 
+      // ページネーション計算
+      const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+      if (currentPage > totalPages) currentPage = 1;
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const paginated = sorted.slice(start, start + ITEMS_PER_PAGE);
+
       // カードを描画
-      // おすすめ順 or 人気順 のとき上位3件にメダルを付ける
       gridEl.innerHTML = "";
-      sorted.forEach((work, i) => {
-        const showMedal = (currentSort === "recommend" || currentSort === "popular") && i < 3;
-        const medal = showMedal ? ["🥇", "🥈", "🥉"][i] : null;
-        gridEl.appendChild(createCard(work, i, medal));
+      paginated.forEach((work, i) => {
+        const globalIndex = start + i;
+        const showMedal = (currentSort === "recommend" || currentSort === "popular") && globalIndex < 3;
+        const medal = showMedal ? ["🥇", "🥈", "🥉"][globalIndex] : null;
+        gridEl.appendChild(createCard(work, globalIndex, medal));
       });
+
+      // ページネーションボタンを描画
+      const paginationEl = document.getElementById("pagination");
+      paginationEl.innerHTML = "";
+      if (totalPages <= 1) return;
+
+      // 前へ
+      const prevBtn = document.createElement("button");
+      prevBtn.className = "page-btn";
+      prevBtn.textContent = "←";
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.addEventListener("click", () => { currentPage--; renderCards(); scrollToGrid(); });
+      paginationEl.appendChild(prevBtn);
+
+      // ページ番号
+      for (let p = 1; p <= totalPages; p++) {
+        const btn = document.createElement("button");
+        btn.className = "page-btn" + (p === currentPage ? " active" : "");
+        btn.textContent = p;
+        btn.addEventListener("click", () => { currentPage = p; renderCards(); scrollToGrid(); });
+        paginationEl.appendChild(btn);
+      }
+
+      // 次へ
+      const nextBtn = document.createElement("button");
+      nextBtn.className = "page-btn";
+      nextBtn.textContent = "→";
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.addEventListener("click", () => { currentPage++; renderCards(); scrollToGrid(); });
+      paginationEl.appendChild(nextBtn);
+    }
+
+    function scrollToGrid() {
+      document.getElementById("cardGrid").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
 
@@ -1810,6 +1869,7 @@
       btn.addEventListener("click", () => {
         favFilterOn = !favFilterOn;
         btn.classList.toggle("active", favFilterOn);
+        currentPage = 1;
         renderCards();
       });
       updateFavBadge(); // 起動時のバッジ更新
@@ -2169,6 +2229,7 @@
     // 検索イベントをまとめて登録
     function setupSearch() {
       searchInput.addEventListener("input", () => {
+        currentPage = 1;
         const kws = getKeywords();
         renderBadges(kws);
         syncTagBtnStates(kws);
@@ -2176,6 +2237,7 @@
       });
 
       modeToggle.addEventListener("change", () => {
+        currentPage = 1;
         updateModeLabel();
         renderCards();
       });
@@ -2189,6 +2251,7 @@
           [sortRecommendBtn, sortPopularBtn, sortNewestBtn].forEach(b => b?.classList.remove("active"));
           btn.classList.add("active");
           currentSort = btn.dataset.sort;
+          currentPage = 1;
           renderCards();
         });
       });
@@ -2316,6 +2379,7 @@
           else renderRanking(works.filter(w => w.tags?.includes("R18")), "ero", "rankingGrid");
         }
         buildTagButtons();
+        currentPage = 1;
         renderCards();
       }
 
