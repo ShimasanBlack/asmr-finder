@@ -1197,37 +1197,38 @@
       <button class="r18-show-btn" id="r18ShowBtn">🔞 大人向け作品も表示する</button>
     </div>
 
-    <!-- 記事バナー -->
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-      <a href="/articles/asmr-article-v3.html" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(126,184,212,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
+    <!-- 記事バナー（articles.htmlからfetchして動的生成） -->
+    <div id="articleBannerWrap" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <!-- フォールバック：fetchが使えない環境用（ローカル） -->
+      <a href="/articles/asmr-article-v3.html" class="article-banner-fallback" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(126,184,212,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ330000/RJ329940_img_main.webp" alt="安眠屋さん" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
         <div style="padding:10px 14px;">
           <p style="font-size:0.72rem;color:#7eb8d4;font-weight:700;margin-bottom:2px;">📝 記事</p>
           <p style="font-size:0.82rem;font-weight:700;color:#d8e0ec;line-height:1.4;">本当に寝れるASMRおすすめ10選</p>
         </div>
       </a>
-      <a href="/articles/amama-asmr-article.html" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(230,126,34,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
+      <a href="/articles/amama-asmr-article.html" class="article-banner-fallback" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(230,126,34,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ01552000/RJ01551452_img_main.webp" alt="ネコミミ双子" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
         <div style="padding:10px 14px;">
           <p style="font-size:0.72rem;color:#e67e22;font-weight:700;margin-bottom:2px;">📝 記事</p>
           <p style="font-size:0.82rem;font-weight:700;color:#d8e0ec;line-height:1.4;">甘々ASMRおすすめ10選</p>
         </div>
       </a>
-      <a href="/articles/natsuyoshi-asmr-article.html" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(39,174,96,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
+      <a href="/articles/natsuyoshi-asmr-article.html" class="article-banner-fallback" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(39,174,96,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ01324000/RJ01323001_img_main.webp" alt="カズサASMR" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
         <div style="padding:10px 14px;">
           <p style="font-size:0.72rem;color:#27ae60;font-weight:700;margin-bottom:2px;">📝 記事</p>
           <p style="font-size:0.82rem;font-weight:700;color:#d8e0ec;line-height:1.4;">夏吉ゆうこASMRおすすめ10選</p>
         </div>
       </a>
-      <a href="/articles/r18-amama-article.html" class="banner-r18" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(232,72,90,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
+      <a href="/articles/r18-amama-article.html" class="article-banner-fallback banner-r18" style="flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(232,72,90,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ01563000/RJ01562443_img_main.webp" alt="同棲ギャルJK" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
         <div style="padding:10px 14px;">
           <p style="font-size:0.72rem;color:#e8485a;font-weight:700;margin-bottom:2px;">📝 記事</p>
           <p style="font-size:0.82rem;font-weight:700;color:#d8e0ec;line-height:1.4;">R18あまあまASMRおすすめ10選</p>
         </div>
       </a>
-      <a href="/articles.html" style="flex:0 0 auto;display:flex;align-items:center;gap:8px;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;padding:12px 16px;text-decoration:none;color:#7eb8d4;font-size:0.8rem;font-weight:700;" onmouseover="this.style.borderColor='rgba(126,184,212,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
+      <a href="/articles.html" class="article-banner-list-btn" style="flex:0 0 auto;display:flex;align-items:center;gap:8px;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;padding:12px 16px;text-decoration:none;color:#7eb8d4;font-size:0.8rem;font-weight:700;" onmouseover="this.style.borderColor='rgba(126,184,212,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
         記事一覧 →
       </a>
     </div>
@@ -2254,6 +2255,74 @@
       renderHistory();
       renderCards();
     }
+
+    // ──────────────────────────────────────
+    // 記事バナー動的生成（articles.htmlからfetch）
+    // ──────────────────────────────────────
+    const R18_ARTICLE_IDS = new Set(["r18-amama-10"]);
+
+    function renderArticleBanners(articles) {
+      const wrap = document.getElementById("articleBannerWrap");
+      // フォールバックを削除
+      wrap.querySelectorAll(".article-banner-fallback").forEach(el => el.remove());
+
+      const accentColors = {
+        "sleep":     "rgba(126,184,212,0.5)",
+        "selection": "rgba(230,126,34,0.5)",
+        "ranking":   "rgba(232,72,90,0.5)",
+      };
+      const labelColors = {
+        "sleep":     "#7eb8d4",
+        "selection": "#e67e22",
+        "ranking":   "#e8485a",
+      };
+
+      articles.forEach(a => {
+        const isR18 = R18_ARTICLE_IDS.has(a.id);
+        const accent = accentColors[a.cat] ?? "rgba(126,184,212,0.5)";
+        const labelColor = labelColors[a.cat] ?? "#7eb8d4";
+        const shortTitle = a.title.replace(/【\d{4}年版】/, "").split("｜")[0].trim();
+
+        const el = document.createElement("a");
+        el.href = a.url;
+        el.className = "article-banner-dynamic" + (isR18 ? " banner-r18" : "");
+        el.style.cssText = "flex:1;min-width:200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;";
+        el.onmouseover = () => el.style.borderColor = accent;
+        el.onmouseout  = () => el.style.borderColor = "rgba(120,150,200,0.15)";
+        el.innerHTML = `
+          ${a.thumb ? `<img src="${a.thumb}" alt="${shortTitle}" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;" loading="lazy">` : `<div style="width:72px;height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2rem;">${a.emoji}</div>`}
+          <div style="padding:10px 14px;">
+            <p style="font-size:0.72rem;color:${labelColor};font-weight:700;margin-bottom:2px;">📝 記事</p>
+            <p style="font-size:0.82rem;font-weight:700;color:#d8e0ec;line-height:1.4;">${shortTitle}</p>
+          </div>`;
+
+        // 記事一覧ボタンの前に挿入
+        const listBtn = wrap.querySelector(".article-banner-list-btn");
+        if (listBtn) wrap.insertBefore(el, listBtn);
+        else wrap.appendChild(el);
+      });
+    }
+
+    // articles.htmlをfetchしてARTICLES配列を抽出
+    async function loadArticleBanners() {
+      try {
+        const res = await fetch("/articles.html");
+        if (!res.ok) throw new Error("fetch失敗");
+        const text = await res.text();
+
+        // ARTICLES = [ ... ]; を正規表現で抽出してevalで配列に変換
+        const match = text.match(/const ARTICLES = (\[[\s\S]*?\]);/);
+        if (!match) throw new Error("ARTICLES配列が見つかりません");
+
+        const articles = Function(`"use strict"; return ${match[1]}`)();
+        renderArticleBanners(articles);
+      } catch (e) {
+        // fetch不可（ローカル環境など）はフォールバックをそのまま表示
+        console.info("記事バナー: フォールバック表示中", e.message);
+      }
+    }
+
+    loadArticleBanners();
 
     init(); // 起動
   </script>
