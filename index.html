@@ -294,14 +294,25 @@
        タグフィルター
     ===================================================== */
     .tag-filter {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      max-width: 700px;
+      max-width: 800px;
       margin: 0 auto;
       opacity: 0;
       animation: fadeUp 0.8s ease 0.5s forwards;
+    }
+    .tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .tag-group-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+      min-width: 70px;
+      opacity: 0.7;
     }
 
     .tag-btn {
@@ -1381,10 +1392,7 @@
           const kws = getKeywords();
           renderBadges(kws);
           // タグボタンのアクティブ状態を同期
-          document.querySelectorAll(".tag-btn").forEach(btn => {
-            if (btn.textContent === "すべて") btn.classList.toggle("active", kws.length === 0);
-            else btn.classList.toggle("active", kws.includes(btn.textContent));
-          });
+          syncTagBtnStates(kws);
           renderCards();
         });
         badgesEl.appendChild(badge);
@@ -1633,10 +1641,7 @@
           }
           const kws = getKeywords();
           renderBadges(kws);
-          document.querySelectorAll(".tag-btn").forEach(btn => {
-            if (btn.textContent === "すべて") btn.classList.toggle("active", kws.length === 0);
-            else btn.classList.toggle("active", kws.includes(btn.textContent));
-          });
+          syncTagBtnStates(kws);
           renderCards();
         });
       });
@@ -2081,48 +2086,74 @@
 
     // works.json から全タグを集めてフィルターボタンを生成
     function buildTagButtons() {
-      // Set で重複を除去してから配列化
-      const allTags = [...new Set(works.flatMap(w => w.tags))];
       tagFilterEl.innerHTML = "";
 
-      // 「すべて」ボタン
-      const allBtn = document.createElement("button");
-      allBtn.className = "tag-btn active";
-      allBtn.textContent = "すべて";
-      allBtn.addEventListener("click", () => {
-        searchInput.value = "";
-        renderBadges([]);
-        tagFilterEl.querySelectorAll(".tag-btn").forEach(b => b.classList.remove("active"));
-        allBtn.classList.add("active");
-        renderCards();
-      });
-      tagFilterEl.appendChild(allBtn);
-
-      // 各タグのボタン（works.json のタグから自動生成）
       const R18_TAGS = new Set(["R18","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","耳舐め","ほんのりR18"]);
-      allTags.forEach(tag => {
+
+      const TAG_GROUPS = [
+        { label: "🎧 表現",  tags: ["耳かき","耳舐め","囁き","バイノーラル","添い寝","自然音","雨音","マッサージ","読み聞かせ","環境音","ヘッドスパ"] },
+        { label: "🎙️ 音質",  tags: ["KU100","高音質","立体音響"] },
+        { label: "✨ 体験",  tags: ["無言","低刺激","単調","没入感","長時間"] },
+        { label: "👤 キャラ", tags: ["お姉さん","妹系","幼なじみ","ヤンデレ","ツンデレ","母性","クール","ダウナー","メスガキ","ロリ","男の娘","ギャル","学生","巨乳","おねショタ"] },
+        { label: "🎭 シチュ", tags: ["NTR","百合","ファンタジー","サキュバス","催眠/トランス","異種族","学園","男性受け","逆転あり","コスプレ","ハーレム","強制"] },
+        { label: "💫 ムード", tags: ["甘やかし","密着","いちゃいちゃ","甘々","癒し","睡眠導入","ほんのりR18"] },
+        { label: "🔞 行為",  tags: ["手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル"], r18: true },
+      ];
+
+      function makeTagBtn(tag) {
         const btn = document.createElement("button");
         btn.className = "tag-btn" + (R18_TAGS.has(tag) ? " tag-btn-r18" : "");
         btn.textContent = tag;
         btn.addEventListener("click", () => {
           const current = getKeywords();
           if (current.includes(tag)) {
-            // すでに検索欄にあれば削除
             searchInput.value = current.filter(k => k !== tag).join(" ");
-            btn.classList.remove("active");
           } else {
-            // 検索欄に追加
             searchInput.value = [...current, tag].join(" ");
-            btn.classList.add("active");
           }
-          // 「すべて」ボタンの状態を更新
-          const allBtnEl = tagFilterEl.querySelector(".tag-btn:first-child");
-          if (getKeywords().length === 0) allBtnEl?.classList.add("active");
-          else allBtnEl?.classList.remove("active");
-          renderBadges(getKeywords());
+          const kws = getKeywords();
+          renderBadges(kws);
+          syncTagBtnStates(kws);
           renderCards();
         });
-        tagFilterEl.appendChild(btn);
+        return btn;
+      }
+
+      // 「すべて」行
+      const allGroup = document.createElement("div");
+      allGroup.className = "tag-group";
+      const allBtn = document.createElement("button");
+      allBtn.className = "tag-btn active";
+      allBtn.id = "tagAllBtn";
+      allBtn.textContent = "すべて";
+      allBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        renderBadges([]);
+        syncTagBtnStates([]);
+        renderCards();
+      });
+      allGroup.appendChild(allBtn);
+      tagFilterEl.appendChild(allGroup);
+
+      // 各カテゴリ行
+      TAG_GROUPS.forEach(group => {
+        const row = document.createElement("div");
+        row.className = "tag-group" + (group.r18 ? " tag-btn-r18" : "");
+
+        const label = document.createElement("span");
+        label.className = "tag-group-label";
+        label.textContent = group.label;
+        row.appendChild(label);
+
+        group.tags.forEach(tag => row.appendChild(makeTagBtn(tag)));
+        tagFilterEl.appendChild(row);
+      });
+    }
+
+    function syncTagBtnStates(kws) {
+      document.querySelectorAll(".tag-btn").forEach(btn => {
+        if (btn.id === "tagAllBtn") btn.classList.toggle("active", kws.length === 0);
+        else btn.classList.toggle("active", kws.includes(btn.textContent));
       });
     }
 
@@ -2131,14 +2162,7 @@
       searchInput.addEventListener("input", () => {
         const kws = getKeywords();
         renderBadges(kws);
-        // タグボタンのアクティブ状態を検索欄と同期
-        document.querySelectorAll(".tag-btn").forEach(btn => {
-          if (btn.textContent === "すべて") {
-            btn.classList.toggle("active", kws.length === 0);
-          } else {
-            btn.classList.toggle("active", kws.includes(btn.textContent));
-          }
-        });
+        syncTagBtnStates(kws);
         renderCards();
       });
 
