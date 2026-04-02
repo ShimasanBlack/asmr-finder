@@ -1545,10 +1545,11 @@
               <span class="score-label">癒し度</span>
               <div class="stars">${healStars}</div>
             </div>
+            ${(work.ero ?? 0) > 0 ? `
             <div class="score-row">
               <span class="score-label">抜き度</span>
               <div class="stars">${eroStars}</div>
-            </div>
+            </div>` : ""}
           </div>
           <p class="card-cta-lead">${ctaLead}</p>
           <a class="card-btn" href="${work.url}" target="_blank" rel="noopener noreferrer"
@@ -1665,10 +1666,11 @@
               <span class="rank-score-label">癒し度</span>
               <span style="font-size:0.65rem;letter-spacing:-1px;">${healStars}</span>
             </div>
+            ${(work.ero ?? 0) > 0 ? `
             <div class="rank-score-row">
               <span class="rank-score-label">抜き度</span>
               <span style="font-size:0.65rem;letter-spacing:-1px;">${eroStars}</span>
-            </div>
+            </div>` : ""}
           </div>
         </div>
       `;
