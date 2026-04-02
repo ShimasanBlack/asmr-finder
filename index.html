@@ -300,10 +300,10 @@
       animation: fadeUp 0.8s ease 0.5s forwards;
     }
     .tag-group {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      align-items: start;
+      gap: 6px 8px;
       margin-bottom: 8px;
     }
     .tag-group-label {
@@ -311,9 +311,13 @@
       color: var(--muted);
       font-weight: 700;
       white-space: nowrap;
-      width: 64px;
-      flex-shrink: 0;
       opacity: 0.7;
+      padding-top: 5px;
+    }
+    .tag-group-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .tag-btn {
@@ -2146,7 +2150,11 @@
         label.textContent = group.label;
         row.appendChild(label);
 
-        group.tags.forEach(tag => row.appendChild(makeTagBtn(tag)));
+        const tagsWrap = document.createElement("div");
+        tagsWrap.className = "tag-group-tags" + (group.r18 ? " tag-btn-r18" : "");
+        group.tags.forEach(tag => tagsWrap.appendChild(makeTagBtn(tag)));
+        row.appendChild(tagsWrap);
+
         tagFilterEl.appendChild(row);
       });
     }
@@ -2196,26 +2204,49 @@
         works = await res.json();
 
         // タグからhealing・eroを自動計算（works.jsonにフィールドがない場合）
-        const HEAL_TAGS = {
-          // 睡眠導入系
-          "睡眠導入": 4, "耳かき": 3, "囁き": 3, "添い寝": 3,
-          "自然音": 3, "環境音": 3, "雨音": 3, "マッサージ": 2,
-          "ヘッドスパ": 2, "バイノーラル": 1, "長時間": 1,
-          // 甘々系（R18作品でも癒し度が上がるように強化）
-          "甘々": 4, "甘やかし": 3, "密着": 3, "いちゃいちゃ": 3,
-          "添い寝": 3, "耳舐め": 2,
-        };
         const ERO_TAGS = {
           "R18": 3, "手コキ": 2, "フェラチオ": 2, "パイズリ": 2,
           "中出し": 2, "乳首責め": 2, "オナサポ": 2, "耳舐め": 1,
           "催眠": 1, "ほんのりR18": 1,
         };
         works = works.map(w => {
-          const tags = w.tags ?? [];
-          const healRaw = tags.reduce((s, t) => s + (HEAL_TAGS[t] ?? 0), 0);
-          const eroRaw  = tags.reduce((s, t) => s + (ERO_TAGS[t]  ?? 0), 0);
-          const autoHealing = Math.min(5, Math.round(healRaw / 1.5));
-          const autoEro     = Math.min(5, Math.round(eroRaw  / 2));
+          const tags = new Set(w.tags ?? []);
+          const eroRaw = [...tags].reduce((s, t) => s + (ERO_TAGS[t] ?? 0), 0);
+          const autoEro = Math.min(5, Math.round(eroRaw / 2));
+
+          // ── 癒し度ルールベース計算 ──
+          let autoHealing = 1; // デフォルト
+
+          // ① 睡眠導入系
+          if (tags.has("睡眠導入")) {
+            if (tags.has("耳かき") && tags.has("囁き")) autoHealing = 5;
+            else if (tags.has("耳かき") || tags.has("囁き")) autoHealing = 4;
+            else autoHealing = 3;
+          }
+          // ② 甘々系
+          else if (tags.has("甘々")) {
+            if (tags.has("耳かき") && tags.has("甘やかし")) autoHealing = 4;
+            else if (tags.has("甘やかし") || tags.has("添い寝")) autoHealing = 3;
+            else autoHealing = 2;
+          }
+          // ③ 癒し系
+          else if (tags.has("癒し")) {
+            if (tags.has("耳かき") || tags.has("囁き")) autoHealing = 4;
+            else autoHealing = 3;
+          }
+          // ④ 耳かきのみ（コアタグなし）
+          else if (tags.has("耳かき")) {
+            autoHealing = 3;
+          }
+          // ⑤ 甘やかし・添い寝のみ
+          else if (tags.has("甘やかし") || tags.has("添い寝")) {
+            autoHealing = 2;
+          }
+
+          // ボーナス：KU100・低刺激・無言
+          const bonus = (tags.has("KU100") || tags.has("低刺激") || tags.has("無言")) ? 1 : 0;
+          autoHealing = Math.min(5, autoHealing + bonus);
+
           return {
             ...w,
             healing: w.healing != null ? w.healing : autoHealing,
