@@ -1325,10 +1325,11 @@
       //    "newest"    → createdAt の新しい順
       const sorted = [...filtered].sort((a, b) => {
         if (currentSort === "popular") {
-          // ② クリック数の多い順（同数なら healing+ero で決定）
+          // クリック数の多い順
           const diff = getClickCount(b.id) - getClickCount(a.id);
           if (diff !== 0) return diff;
-          return ((b.healing ?? 0) + (b.ero ?? 0)) - ((a.healing ?? 0) + (a.ero ?? 0));
+          // クリック数が同数の場合は価格の高い順（高価格＝高品質の目安）
+          return (Number(b.price) || 0) - (Number(a.price) || 0);
         }
         if (currentSort === "newest") {
           const da = a.createdAt ?? "";
