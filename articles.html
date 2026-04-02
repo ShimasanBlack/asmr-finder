@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASMR記事一覧 | Marigura ASMR</title>
+  <meta name="description" content="睡眠導入・耳かき・囁きなどASMRの選び方・おすすめ作品を解説した記事一覧。DLsite人気作を厳選紹介。" />
+  <!-- GA4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-10ZKN9D1L2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-10ZKN9D1L2');
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #333;
+      background: #f5f5f5;
+    }
+
+    /* ナビ */
+    .site-nav {
+      background: #1a1a1a;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .site-nav a { color: #ccc; text-decoration: none; font-size: 0.85rem; }
+    .site-nav a:hover { color: #fff; }
+    .nav-logo { color: #fff !important; font-weight: 800; font-size: 1rem; }
+
+    /* メインラッパー */
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 16px 80px;
+    }
+
+    /* ページタイトル */
+    .page-title {
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      font-weight: 900;
+      color: #1a1a1a;
+      border-left: 5px solid #e8485a;
+      padding-left: 14px;
+      margin-bottom: 8px;
+    }
+    .page-desc {
+      font-size: 0.88rem;
+      color: #777;
+      margin-bottom: 32px;
+      padding-left: 2px;
+    }
+
+    /* カテゴリフィルター */
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .cat-btn {
+      padding: 6px 16px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: #fff;
+      color: #555;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .cat-btn:hover { border-color: #e8485a; color: #e8485a; }
+    .cat-btn.active { background: #e8485a; border-color: #e8485a; color: #fff; }
+
+    /* 記事グリッド */
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    /* 記事カード */
+    .article-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      transition: transform 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .article-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+    .article-card-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: #f0f0f0;
+      display: block;
+    }
+    .article-card-thumb-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .article-card-body {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .article-card-cat {
+      display: inline-block;
+      background: #fff0f0;
+      color: #e8485a;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      letter-spacing: 0.04em;
+    }
+    .article-card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      line-height: 1.5;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .article-card-desc {
+      font-size: 0.78rem;
+      color: #777;
+      line-height: 1.6;
+      flex: 1;
+    }
+    .article-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .article-card-date { font-size: 0.7rem; color: #bbb; }
+    .article-card-read {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #e8485a;
+    }
+
+    /* 空メッセージ */
+    .no-articles {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    /* サイト誘導 */
+    .site-cta {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-radius: 14px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-top: 48px;
+      color: #fff;
+    }
+    .site-cta h2 { font-size: 1.1rem; color: #fff; border: none; margin-bottom: 8px; }
+    .site-cta p { font-size: 0.85rem; color: #aaa; margin-bottom: 16px; }
+    .btn-site {
+      display: inline-block;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #7eb8d4, #5a9db8);
+      color: #1a1a2e !important;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+    .btn-site:hover { opacity: 0.9; }
+
+    @media (max-width: 480px) {
+      .articles-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ナビ -->
+<nav class="site-nav">
+  <a href="/index.html" class="nav-logo">🎧 Marigura ASMR</a>
+  <a href="/index.html">作品一覧</a>
+  <a href="/articles.html">記事</a>
+</nav>
+
+<div class="wrap">
+
+  <h1 class="page-title">📝 ASMR記事一覧</h1>
+  <p class="page-desc">睡眠導入・おすすめ作品・選び方など、ASMR関連の記事をまとめています。</p>
+
+  <!-- カテゴリフィルター -->
+  <div class="category-filter" id="categoryFilter">
+    <button class="cat-btn active" data-cat="all">すべて</button>
+    <button class="cat-btn" data-cat="sleep">睡眠導入</button>
+    <button class="cat-btn" data-cat="howto">選び方</button>
+    <button class="cat-btn" data-cat="ranking">ランキング</button>
+  </div>
+
+  <!-- 記事グリッド -->
+  <div class="articles-grid" id="articlesGrid"></div>
+
+  <!-- サイト誘導 -->
+  <div class="site-cta">
+    <h2>🎧 作品をもっと探したい人へ</h2>
+    <p>タグ・ジャンルで絞り込める作品検索ツールです。10秒で当たり作品が見つかります。</p>
+    <a href="/index.html" class="btn-site">作品一覧を見る（無料）</a>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// 記事データ（手動管理）
+// 新しい記事を追加するときはここに追記するだけ
+// ============================================================
+const ARTICLES = [
+  {
+    id:       "sleep-10",
+    cat:      "sleep",
+    catLabel: "睡眠導入",
+    title:    "【2026年版】本当に寝れるASMRおすすめ10選｜実際に眠れた作品だけ厳選",
+    desc:     "耳かき・囁き・自然音など睡眠特化の10作品をプロが厳選。今夜から使える睡眠導入ASMRを紹介します。",
+    url:      "/asmr-article-v3.html",
+    thumb:    "",
+    emoji:    "😴",
+    date:     "2026-04-02",
+  },
+  // ↓ 新しい記事はここに追記
+  // {
+  //   id:       "article-id",
+  //   cat:      "ranking",
+  //   catLabel: "ランキング",
+  //   title:    "記事タイトル",
+  //   desc:     "記事の説明文",
+  //   url:      "/article.html",
+  //   thumb:    "",
+  //   emoji:    "🎧",
+  //   date:     "2026-04-10",
+  // },
+];
+
+// ============================================================
+// レンダリング
+// ============================================================
+let currentCat = "all";
+
+function renderArticles() {
+  const grid = document.getElementById("articlesGrid");
+  const filtered = currentCat === "all"
+    ? ARTICLES
+    : ARTICLES.filter(a => a.cat === currentCat);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="no-articles" style="grid-column:1/-1">この記事は現在準備中です。</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(a => `
+    <a href="${a.url}" class="article-card">
+      ${a.thumb
+        ? `<img class="article-card-thumb" src="${a.thumb}" alt="${a.title}" loading="lazy">`
+        : `<div class="article-card-thumb-placeholder">${a.emoji}</div>`
+      }
+      <div class="article-card-body">
+        <span class="article-card-cat">${a.catLabel}</span>
+        <p class="article-card-title">${a.title}</p>
+        <p class="article-card-desc">${a.desc}</p>
+        <div class="article-card-footer">
+          <span class="article-card-date">${a.date}</span>
+          <span class="article-card-read">続きを読む →</span>
+        </div>
+      </div>
+    </a>
+  `).join("");
+}
+
+// カテゴリフィルター
+document.getElementById("categoryFilter").addEventListener("click", e => {
+  const btn = e.target.closest(".cat-btn");
+  if (!btn) return;
+  document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  currentCat = btn.dataset.cat;
+  renderArticles();
+});
+
+// 初期表示
+renderArticles();
+</script>
+</body>
+</html>
