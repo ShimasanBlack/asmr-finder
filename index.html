@@ -95,7 +95,8 @@
     }
     .logo span { color: var(--accent2); font-style: italic; }
 
-    nav { display: flex; gap: 24px; font-size: 0.82rem; color: var(--muted); }
+    nav { display: flex; gap: 24px; font-size: 0.82rem; color: #ccc; }
+    nav a { color: #ccc; text-decoration: none; }
     nav a:hover { color: var(--accent); transition: color 0.2s; }
 
     /* =====================================================
@@ -1445,8 +1446,8 @@
       card.addEventListener("click", (e) => {
         if (e.target.closest(".card-btn")) return;
         // ③ カードクリック → 閲覧履歴に追加してからページ遷移
-        addHistory(work.id);
-        window.location.href = `detail.html?id=${work.id}`;
+        trackClick(work.id, work.title, work.url);
+        window.open(work.url, "_blank", "noopener");
       });
 
       // ① DLsiteボタンクリック → trackClick でGA4・localStorage・consoleに記録
@@ -1627,7 +1628,7 @@
       `;
 
       card.addEventListener("click", () => {
-        window.location.href = `detail.html?id=${work.id}`;
+        window.open(work.url, "_blank", "noopener");
       });
 
       return card;
@@ -1750,10 +1751,11 @@
         </div>
       `;
 
-      // カードクリックで詳細ページへ（ボタン以外）
+      // カードクリックでDLsiteへ直接遷移（ボタン以外）
       document.getElementById("pickupCard")?.addEventListener("click", (e) => {
         if (e.target.closest(".pickup-btn")) return;
-        window.location.href = `detail.html?id=${top.id}`;
+        trackClick(top.id, top.title, top.url);
+        window.open(top.url, "_blank", "noopener");
       });
 
       section.style.display = "block";
@@ -1937,7 +1939,7 @@
         `;
         // クリックで詳細ページへ
         card.addEventListener("click", () => {
-          window.location.href = `detail.html?id=${work.id}`;
+          window.open(work.url, "_blank", "noopener");
         });
         list.appendChild(card);
       });
