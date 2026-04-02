@@ -76,4 +76,59 @@
     `;
   });
 
+  // ──────────────────────────────────────
+  // 関連記事自動生成（#commonRelated）
+  // articles.htmlをfetchしてARTICLES配列から関連記事を生成
+  // ──────────────────────────────────────
+  async function loadRelatedArticles() {
+    const el = document.getElementById("commonRelated");
+    if (!el) return;
+
+    const currentId  = el.dataset.id;       // 現在の記事ID
+    const tagsStr    = el.dataset.tags ?? "";// カンマ区切りのタグ
+    const currentTags = tagsStr.split(",").map(t => t.trim()).filter(Boolean);
+    const maxItems   = parseInt(el.dataset.max ?? "3");
+
+    try {
+      const res = await fetch("/articles.html");
+      if (!res.ok) throw new Error("fetch失敗");
+      const text = await res.text();
+      const match = text.match(/const ARTICLES = (\[[\s\S]*?\]);/);
+      if (!match) throw new Error("ARTICLES配列が見つかりません");
+      const articles = Function(`"use strict"; return ${match[1]}`)();
+
+      // 現在の記事を除外 → タグが1つ以上一致 → 一致数が多い順にソート
+      const related = articles
+        .filter(a => a.id !== currentId)
+        .map(a => {
+          const aTags = a.relatedTags ?? [];
+          const score = currentTags.filter(t => aTags.includes(t)).length;
+          return { ...a, score };
+        })
+        .filter(a => a.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, maxItems);
+
+      if (related.length === 0) return;
+
+      // R18記事はlocalStorageのshowR18状態に従う
+      const showR18 = localStorage.getItem("showR18") === "true";
+      const visible = related.filter(a => !a.r18 || showR18);
+      if (visible.length === 0) return;
+
+      el.className = "box-related";
+      el.innerHTML = `
+        <p class="rel-title">📚 関連記事</p>
+        <ul>
+          ${visible.map(a => `<li>${a.emoji} <a href="${a.url}">${a.title}</a></li>`).join("")}
+        </ul>
+      `;
+    } catch (e) {
+      // fetch不可（ローカル）はフォールバック表示なし
+      console.info("関連記事: fetch不可", e.message);
+    }
+  }
+
+  loadRelatedArticles();
+
 })();
