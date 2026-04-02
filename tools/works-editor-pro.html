@@ -598,7 +598,6 @@ select option { background: var(--surface2); }
       <button class="btn btn-ghost" id="exportBtn" title="JSONをファイルに保存">⬇ Export</button>
       <label for="importFile" class="btn btn-ghost" title="JSONファイルを読み込む" style="cursor:pointer;">⬆ Import</label>
       <button class="btn btn-ghost" id="openJsonBtn" title="works.jsonをpushするコマンドをコピー">📤 works.json をpush</button>
-      <button class="btn btn-ghost" id="openFileBtn" title="works.jsonをメモ帳で開くコマンドをコピー">📂 works.json を開く</button>
       <input type="file" id="importFile" accept=".json" />
       <button class="btn btn-red"   id="clearAllBtn" title="全件削除">🗑 全消去</button>
     </div>
@@ -3066,7 +3065,7 @@ if (draftRestored) {
 
 // 📂 works.json を開くコマンドをコピー
 document.getElementById("openJsonBtn").addEventListener("click", async () => {
-  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && git add data/works.json && git commit -m \"feat: works.json更新\" && git push origin main";
+  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && git add data/works.json && git commit -m \"feat: works.json更新\" && git push origin main && echo \"✅ push完了\" || echo \"❌ エラーあり\"";
   try {
     await navigator.clipboard.writeText(cmd);
     showToast("📂 pushコマンドをコピーしました。Git Bashに貼り付けてください", "ok");
@@ -3075,15 +3074,6 @@ document.getElementById("openJsonBtn").addEventListener("click", async () => {
   }
 });
 
-document.getElementById("openFileBtn").addEventListener("click", async () => {
-  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && notepad data/works.json";
-  try {
-    await navigator.clipboard.writeText(cmd);
-    showToast("📂 コマンドをコピーしました。Git Bashに貼り付けてください", "ok");
-  } catch {
-    showToast("❌ コピーに失敗しました", "err");
-  }
-});
 document.getElementById("regenDescBtn").addEventListener("click", () => {
   const tags  = parseTags(fTags.value);
   const title = fTitle.value.trim();
