@@ -394,11 +394,11 @@
     .card-thumb,
     .card-thumb-placeholder {
       width: 100%;
-      aspect-ratio: 3/4;
+      aspect-ratio: 4/3;
       object-fit: cover;
+      object-position: top center;
       display: block;
       background: var(--surface2);
-      /* はみ出し防止 */
       flex-shrink: 0;
     }
 
@@ -727,7 +727,7 @@
 
     .rank-card .card-thumb,
     .rank-card .card-thumb-placeholder {
-      width: 100%; aspect-ratio: 3/4; object-fit: cover;
+      width: 100%; aspect-ratio: 4/3; object-fit: cover; object-position: top center;
       display: block; background: var(--surface2);
     }
     .rank-card .card-body {
@@ -2056,14 +2056,16 @@
           "催眠": 1, "ほんのりR18": 1,
         };
         works = works.map(w => {
-          if (w.healing != null && w.ero != null) return w;
           const tags = w.tags ?? [];
           const healRaw = tags.reduce((s, t) => s + (HEAL_TAGS[t] ?? 0), 0);
           const eroRaw  = tags.reduce((s, t) => s + (ERO_TAGS[t]  ?? 0), 0);
-          // 除数を小さくして全体的に高めにスケール
-          const healing = Math.min(5, Math.round(healRaw / 1.5));
-          const ero     = Math.min(5, Math.round(eroRaw  / 2));
-          return { ...w, healing, ero };
+          const autoHealing = Math.min(5, Math.round(healRaw / 1.5));
+          const autoEro     = Math.min(5, Math.round(eroRaw  / 2));
+          return {
+            ...w,
+            healing: w.healing != null ? w.healing : autoHealing,
+            ero:     w.ero     != null ? w.ero     : autoEro,
+          };
         });
 
       } catch (err) {
