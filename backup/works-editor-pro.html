@@ -94,7 +94,7 @@ input, textarea, select, .json-display { user-select: text; }
 /* 3カラム本体 */
 .cols {
   display: grid;
-  grid-template-columns: 360px 1fr 320px;
+  grid-template-columns: 360px 1fr 400px;
   overflow: hidden;
   height: 100%; /* ① 各カラムが親の高さを継承できるようにする */
 }
@@ -413,8 +413,7 @@ select option { background: var(--surface2); }
 /* プレビューエリア：高さを固定して縦いっぱいにならないようにする */
 .preview-area {
   flex: 0 0 auto;
-  max-height: 45%; /* 上半分に収める */
-  overflow-y: auto;
+  overflow: visible;
   padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   background: #0b0d12;
@@ -429,11 +428,11 @@ select option { background: var(--surface2); }
 }
 .preview-img {
   width: 100%;
-  aspect-ratio: 3/4;
   object-fit: cover;
   display: block;
   background: #1c2130;
-  max-height: 160px; /* ⑪ コンパクト */
+  height: 140px; /* 固定高さでJSONエリアを守る */
+  max-height: 140px;
 }
 .preview-body { padding: 10px 12px 12px; }
 .preview-title { font-size: 0.82rem; font-weight: 700; line-height: 1.4; margin-bottom: 4px; color: #d8e0ec; }
@@ -478,19 +477,11 @@ select option { background: var(--surface2); }
   display: flex;
 }
 .json-lines {
-  padding: 10px 6px 10px 10px;
-  font-family: "Consolas","Courier New",monospace;
-  font-size: 0.7rem;
-  line-height: 1.6;
-  color: var(--muted);
-  text-align: right;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-  min-width: 32px;
-  user-select: none;
+  display: none;
 }
 .json-display {
   flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   font-family: "Consolas","Courier New",monospace;
   font-size: 0.7rem;
@@ -583,7 +574,8 @@ select option { background: var(--surface2); }
     <div class="hdr-btn-group">
       <button class="btn btn-ghost" id="exportBtn" title="JSONをファイルに保存">⬇ Export</button>
       <button class="btn btn-ghost" id="importBtn" title="JSONファイルを読み込む">⬆ Import</button>
-      <button class="btn btn-ghost" id="openJsonBtn" title="works.jsonを開くコマンドをコピー">📂 works.json を開く</button>
+      <button class="btn btn-ghost" id="openJsonBtn" title="works.jsonをpushするコマンドをコピー">📤 works.json をpush</button>
+      <button class="btn btn-ghost" id="openFileBtn" title="works.jsonをメモ帳で開くコマンドをコピー">📂 works.json を開く</button>
       <input type="file" id="importFile" accept=".json" />
       <button class="btn btn-red"   id="clearAllBtn" title="全件削除">🗑 全消去</button>
     </div>
@@ -1802,6 +1794,25 @@ function enterEditMode(idx) {
 
   // フォームの先頭へスクロール
   document.querySelector(".col").scrollTop = 0;
+
+  // JSONエリアを編集中作品の位置までスクロール
+  setTimeout(() => {
+    const jsonWrap = document.getElementById("jsonWrap");
+    const json = JSON.stringify(works, null, 2);
+    const lines = json.split("\n");
+    // 編集中作品のidが何行目にあるか探す
+    const targetId = works[idx]?.id;
+    if (!targetId || !jsonWrap) return;
+    let targetLine = 0;
+    let workCount = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('"id"')) workCount++;
+      if (workCount === idx) { targetLine = i; break; }
+    }
+    // 1行あたりの高さ（font-size 0.7rem * line-height 1.6）
+    const lineHeight = 0.7 * 16 * 1.6;
+    jsonWrap.scrollTop = targetLine * lineHeight;
+  }, 80);
 }
 
 function exitEditMode() {
@@ -2061,8 +2072,8 @@ exportBtn.addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(works, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  // 【9】時刻まで含めて同日の上書きを防ぐ（例: works_2026-04-01_09-30.json）
-  a.download = `works_${new Date().toISOString().slice(0,16).replace("T","_").replace(":","-")}.json`;
+  // ファイル名を works.json に固定
+  a.download = "works.json";
   a.click();
   URL.revokeObjectURL(a.href);
   showToast("⬇ エクスポートしました", "ok");
@@ -2618,10 +2629,17 @@ if (draftRestored) {
 
 // 📂 works.json を開くコマンドをコピー
 document.getElementById("openJsonBtn").addEventListener("click", async () => {
-  const cmd = [
-    "cd /c/Users/seiya/Documents/asmr-finder",
-    "notepad data/works.json",
-  ].join(" && ");
+  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && git add data/works.json && git commit -m \"feat: works.json更新\" && git push origin main";
+  try {
+    await navigator.clipboard.writeText(cmd);
+    showToast("📂 pushコマンドをコピーしました。Git Bashに貼り付けてください", "ok");
+  } catch {
+    showToast("❌ コピーに失敗しました", "err");
+  }
+});
+
+document.getElementById("openFileBtn").addEventListener("click", async () => {
+  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && notepad data/works.json";
   try {
     await navigator.clipboard.writeText(cmd);
     showToast("📂 コマンドをコピーしました。Git Bashに貼り付けてください", "ok");
@@ -2629,8 +2647,6 @@ document.getElementById("openJsonBtn").addEventListener("click", async () => {
     showToast("❌ コピーに失敗しました", "err");
   }
 });
-
-// 🔄 説明文をタグから再生成
 document.getElementById("regenDescBtn").addEventListener("click", () => {
   const tags  = parseTags(fTags.value);
   const title = fTitle.value.trim();
