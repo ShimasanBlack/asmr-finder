@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-10ZKN9D1L2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-XXXXXXXXXX');
-</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASMR Finder – 癒しの作品を探そう</title>
@@ -23,12 +14,12 @@
        例: G-XXXXXXXXXX
        取得方法: GA管理画面 → データストリーム → 測定ID
   ===================================================== -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-10ZKN9D1L2"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-10ZKN9D1L2');
+    gtag('config', 'GA_MEASUREMENT_ID');
   </script>
   <!-- ===================================================== -->
 
@@ -1425,21 +1416,6 @@
     // ⑤ CTA直前の一言を生成する関数
     //    読者の背中を押す短いコピー
     // ==============================================
-    function getCtaLead(work) {
-      const h = work.healing ?? 0;
-      const e = work.ero     ?? 0;
-      const tags = work.tags ?? [];
-
-      if (h === 5 && e <= 1)              return "💤 迷ったらこれ。睡眠特化の定番作品";
-      if (tags.includes("耳かき"))        return "👂 耳かき系で一番人気のジャンル";
-      if (tags.includes("添い寝"))        return "🌙 孤独な夜に寄り添ってくれます";
-      if (tags.includes("バイノーラル"))  return "🎧 イヤホンで聴くと効果が倍増";
-      if (tags.includes("自然音") || tags.includes("雨音")) return "🌧️ BGMとしてかけっぱなしにできる";
-      if (e >= 4)                         return "🔥 刺激重視の方におすすめ";
-      if (h >= 4)                         return "✨ まずはこれを試してみてください";
-      return "👉 詳細ページで試聴できます";
-    }
-
     // ==============================================
     // 6. カード要素を生成する関数
     //    medal … "🥇"/"🥈"/"🥉" または null
@@ -1483,9 +1459,11 @@
       const healStars = renderStars(work.healing, "heal");
       const eroStars  = renderStars(work.ero,     "ero");
 
-      // ① ベネフィット文言と ⑤ CTA一言を生成
+      // ① ベネフィット文言と CTA一言を生成
+      // cta は works.json の cta フィールドをそのまま使う
+      // （works-editor-pro.html で生成したタグベースの文言と一致する）
       const benefitText = getBenefitText(work);
-      const ctaLead     = getCtaLead(work);
+      const ctaLead     = work.cta || "";
 
       // ③ タグHTMLを生成（クリックで検索できるように data-tag 属性を付与）
       const tagsHtml = work.tags.map(t => {
@@ -2049,7 +2027,7 @@
 
       try {
         // ② works.json を取得（await で完了を待つ）
-        const res = await fetch("data/works.json");
+        const res = await fetch("works.json");
         works = await res.json(); // ③ 配列として works に代入
 
       } catch (err) {
