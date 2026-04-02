@@ -1451,14 +1451,14 @@
       //   外部ファイル不要・ファイルが増えない・どこでも動く ─
       const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
 
-      const thumbHtml = work.img
-        ? `<img class="card-thumb" src="${work.img}" alt="${work.title}" loading="lazy"
+      const thumbHtml = work.image
+        ? `<img class="card-thumb" src="${work.image}" alt="${work.title}" loading="lazy"
              onerror="this.src='${DUMMY_SRC}'">`
         : `<img class="card-thumb-placeholder" src="${DUMMY_SRC}" alt="No image">`;
 
       // ★ 表示を生成（renderStars 関数を使う）
-      const healStars = renderStars(work.healing, "heal");
-      const eroStars  = renderStars(work.ero,     "ero");
+      const healStars = renderStars(work.healing ?? 0, "heal");
+      const eroStars  = renderStars(work.ero ?? 0,     "ero");
 
       // ① ベネフィット文言と CTA一言を生成
       // cta は works.json の cta フィールドをそのまま使う
@@ -1564,9 +1564,9 @@
           if (sortKey === "total") {
             score = work.healing + work.ero; // 合計（最大10）
           } else if (sortKey === "healing") {
-            score = work.healing;
+            score = work.healing ?? 0;
           } else if (sortKey === "ero") {
-            score = work.ero;
+            score = work.ero ?? 0;
           } else {
             score = 0;
           }
@@ -1585,16 +1585,16 @@
 
       const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
 
-      const thumbHtml = work.img
-        ? `<img class="card-thumb" src="${work.img}" alt="${work.title}" loading="lazy"
+      const thumbHtml = work.image
+        ? `<img class="card-thumb" src="${work.image}" alt="${work.title}" loading="lazy"
              onerror="this.src='${DUMMY_SRC}'">`
         : `<img class="card-thumb-placeholder" src="${DUMMY_SRC}" alt="No image">`;
 
       // 1〜3位は金銀銅クラス、4位以降は rank-other
       const badgeClass = rank <= 3 ? `rank-${rank}` : "rank-other";
 
-      const healPct = (work.healing / 5) * 100;
-      const eroPct  = (work.ero     / 5) * 100;
+      const healPct = ((work.healing ?? 0) / 5) * 100;
+      const eroPct  = ((work.ero ?? 0)     / 5) * 100;
 
       card.innerHTML = `
         ${thumbHtml}
@@ -1924,7 +1924,7 @@
         const card = document.createElement("div");
         card.className = "history-card";
         card.innerHTML = `
-          <img src="${work.img || DUMMY_SRC}" alt="${work.title}"
+          <img src="${work.image || DUMMY_SRC}" alt="${work.title}"
                onerror="this.src='${DUMMY_SRC}'">
           <p class="history-card-title">${work.title}</p>
         `;
