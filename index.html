@@ -1593,27 +1593,26 @@
       // 1〜3位は金銀銅クラス、4位以降は rank-other
       const badgeClass = rank <= 3 ? `rank-${rank}` : "rank-other";
 
-      const healPct = ((work.healing ?? 0) / 5) * 100;
-      const eroPct  = ((work.ero ?? 0)     / 5) * 100;
+      const healStars = Array.from({length: 5}, (_, i) =>
+        `<span style="color:${i < (work.healing ?? 0) ? 'var(--heal-col)' : 'rgba(255,255,255,0.12)'}">★</span>`
+      ).join("");
+      const eroStars = Array.from({length: 5}, (_, i) =>
+        `<span style="color:${i < (work.ero ?? 0) ? 'var(--ero-col)' : 'rgba(255,255,255,0.12)'}">★</span>`
+      ).join("");
 
       card.innerHTML = `
         ${thumbHtml}
         <div class="rank-badge ${badgeClass}">${rank}</div>
         <div class="card-body">
           <p class="card-title">${work.title}</p>
-          <p class="rank-total-score">総合 ${totalScore} pt</p>
           <div class="rank-score-bars">
             <div class="rank-score-row">
               <span class="rank-score-label">癒し度</span>
-              <div class="rank-score-track">
-                <div class="rank-score-fill heal" style="width:${healPct}%"></div>
-              </div>
+              <span style="font-size:0.65rem;letter-spacing:-1px;">${healStars}</span>
             </div>
             <div class="rank-score-row">
               <span class="rank-score-label">抜き度</span>
-              <div class="rank-score-track">
-                <div class="rank-score-fill ero" style="width:${eroPct}%"></div>
-              </div>
+              <span style="font-size:0.65rem;letter-spacing:-1px;">${eroStars}</span>
             </div>
           </div>
         </div>
@@ -1709,7 +1708,7 @@
 
       const DUMMY_SRC = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%231c2130'/%3E%3Ccircle cx='150' cy='160' r='54' fill='none' stroke='%237eb8d4' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M126 160 a24 24 0 0 1 48 0 v30 a8 8 0 0 1-8 8h-4v10a12 12 0 0 1-24 0v-10h-4a8 8 0 0 1-8-8z' fill='%237eb8d4' opacity='0.35'/%3E%3Cellipse cx='134' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Cellipse cx='166' cy='152' rx='5' ry='7' fill='%237eb8d4' opacity='0.5'/%3E%3Crect x='60' y='270' width='180' height='8' rx='4' fill='%236b7a96' opacity='0.35'/%3E%3Crect x='90' y='292' width='120' height='6' rx='3' fill='%236b7a96' opacity='0.22'/%3E%3C/svg%3E`;
 
-      const thumbSrc = top.img || DUMMY_SRC;
+      const thumbSrc = top.image || DUMMY_SRC;
       const healStars = Array.from({length: 5}, (_, i) =>
         `<span style="color:${i < (top.healing ?? 0) ? 'var(--heal-col)' : 'rgba(255,255,255,0.1)'}">★</span>`
       ).join("");
