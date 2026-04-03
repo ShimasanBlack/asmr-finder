@@ -1191,7 +1191,7 @@
 
     <!-- R18表示切り替え（上部） -->
     <div class="r18-btn-wrap" style="margin:8px 0 12px;justify-content:center;">
-      <span class="r18-status-badge" id="r18StatusBadgeTop">😴 全年齢・癒し系のみ表示中</span>
+      <span class="r18-status-badge" id="r18StatusBadgeTop">全年齢・癒し系のみ表示中</span>
       <button class="r18-show-btn" id="r18ShowBtnTop">🔞 大人向け作品も表示する</button>
     </div>
 
@@ -1231,12 +1231,12 @@
 
     <!-- R18表示切り替えボタン -->
     <div class="r18-btn-wrap">
-      <span class="r18-status-badge" id="r18StatusBadge">😴 全年齢・癒し系のみ表示中</span>
+      <span class="r18-status-badge" id="r18StatusBadge">全年齢・癒し系のみ表示中</span>
       <button class="r18-show-btn" id="r18ShowBtn">🔞 大人向け作品も表示する</button>
     </div>
 
     <!-- 記事バナー（articles.htmlからfetchして動的生成） -->
-    <div id="articleBannerWrap" style="display:flex;gap:10px;margin-bottom:20px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;">
+    <div id="articleBannerWrap" style="display:flex;gap:10px;margin-bottom:20px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;overflow-y:visible;min-width:max-content;">
       <!-- フォールバック：fetchが使えない環境用（ローカル） -->
       <a href="/articles/asmr-article-v3.html" class="article-banner-fallback" style="flex:0 0 200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(120,150,200,0.15);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='rgba(126,184,212,0.5)'" onmouseout="this.style.borderColor='rgba(120,150,200,0.15)'">
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ330000/RJ329940_img_main.webp" alt="安眠屋さん" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
@@ -2375,8 +2375,8 @@
 
       function applyR18State() {
         const labels = showR18
-          ? { badge: "🔞 R18含むすべて表示中", btn: "😴 全年齢のみに戻す" }
-          : { badge: "😴 全年齢・癒し系のみ表示中", btn: "🔞 大人向け作品も表示する" };
+          ? { badge: "R18含むすべて表示中", btn: "😴 全年齢のみに戻す" }
+          : { badge: "全年齢・癒し系のみ表示中", btn: "🔞 大人向け作品も表示する" };
 
         // 下部ボタン
         r18StatusBadge.textContent = labels.badge;
