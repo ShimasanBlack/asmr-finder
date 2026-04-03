@@ -2278,8 +2278,16 @@
         works = works.map(w => {
           const tags = new Set(w.tags ?? []);
           const eroRaw = [...tags].reduce((s, t) => s + (ERO_TAGS[t] ?? 0), 0);
-          const eroMin = tags.has("ほんのりR18") ? 1 : 3;
-          const autoEro = Math.min(5, Math.max(eroMin, Math.round(eroRaw / 2)));
+          const isR18work = tags.has("R18");
+          const isHonnoR18 = tags.has("ほんのりR18");
+          let autoEro;
+          if (!isR18work && !isHonnoR18) {
+            autoEro = 0; // 健全作品は刺激度0
+          } else if (isHonnoR18 && !isR18work) {
+            autoEro = Math.min(5, Math.max(1, Math.round(eroRaw / 2))); // ほんのりR18のみ→1〜5
+          } else {
+            autoEro = Math.min(5, Math.max(3, Math.round(eroRaw / 2))); // R18作品→3〜5
+          }
 
           // ── 癒し度ルールベース計算 ──
           let autoHealing = 1; // デフォルト
@@ -2402,7 +2410,7 @@
     // ──────────────────────────────────────
     // 記事バナー動的生成（articles.htmlからfetch）
     // ──────────────────────────────────────
-    const R18_ARTICLE_IDS = new Set(["r18-amama-10"]);
+    const R18_ARTICLE_IDS = new Set(["r18-amama-10", "onasapo-10"]);
 
     function renderArticleBanners(articles) {
       const wrap = document.getElementById("articleBannerWrap");
@@ -2427,7 +2435,7 @@
       };
 
       visible.forEach(a => {
-        const isR18 = R18_ARTICLE_IDS.has(a.id);
+        const isR18 = a.r18 === true;
         const accent = accentColors[a.cat] ?? "rgba(126,184,212,0.5)";
         const labelColor = labelColors[a.cat] ?? "#7eb8d4";
         const shortTitle = a.title.replace(/【\d{4}年版】/, "").split("｜")[0].trim();
