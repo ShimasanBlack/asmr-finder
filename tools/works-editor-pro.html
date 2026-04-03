@@ -719,6 +719,22 @@ select option { background: var(--surface2); }
                 <span style="font-size:0.65rem;color:var(--amber);font-weight:700;">💡 タイトルに含まれるタグ候補</span>
                 <div id="titleTagSuggestionBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
               </div>
+              <!-- DLsiteタグ取込 -->
+              <div style="margin-top:8px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input type="text" id="dlsiteTagInput"
+                    placeholder="DLsiteのタグをここに貼り付け（例：ASMR 癒し バイノーラル/ダミヘ）"
+                    style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;" />
+                  <button class="btn btn-ghost" id="dlsiteTagImportBtn"
+                    style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
+                    🔍 照合
+                  </button>
+                </div>
+                <div id="dlsiteTagMatches" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;">
+                  <span style="font-size:0.65rem;color:#5dc4a8;font-weight:700;">✅ 一致したタグ</span>
+                  <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+                </div>
+              </div>
             </div>
 
             <div class="field full">
@@ -2778,11 +2794,76 @@ clearFormBtn.addEventListener("click", () => {
   clearForm();
 });
 
+// ─────────────────────────────────────────
+// DLsiteタグ照合
+// ─────────────────────────────────────────
+const dlsiteTagInput     = document.getElementById("dlsiteTagInput");
+const dlsiteTagImportBtn = document.getElementById("dlsiteTagImportBtn");
+const dlsiteTagMatches   = document.getElementById("dlsiteTagMatches");
+const dlsiteTagMatchBtns = document.getElementById("dlsiteTagMatchBtns");
+
+const ALL_DEFINED_TAGS = [
+  ...CORE_TYPES.map(c => c.key),
+  ...Object.values(ATTRIBUTES).flatMap(g => g.tags ?? [])
+];
+
+function importDlsiteTags() {
+  const raw = dlsiteTagInput.value.trim();
+  if (!raw) return;
+
+  const dlTags = raw.split(/[\s　、,，\/]+/).map(t => t.trim()).filter(Boolean);
+  const currentTags = new Set(parseTags(fTags.value));
+
+  const matched = ALL_DEFINED_TAGS.filter(def =>
+    dlTags.some(dl => dl === def || dl.includes(def) || def.includes(dl))
+    && !currentTags.has(def)
+  );
+
+  dlsiteTagMatches.style.display = "block";
+  dlsiteTagMatchBtns.innerHTML = "";
+
+  if (matched.length === 0) {
+    dlsiteTagMatchBtns.innerHTML = '<span style="font-size:0.72rem;color:var(--muted);">一致するタグが見つかりませんでした</span>';
+    return;
+  }
+
+  const addAllBtn = document.createElement("button");
+  addAllBtn.textContent = `+ すべて追加（${matched.length}件）`;
+  addAllBtn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.5);background:rgba(93,196,168,0.2);color:#5dc4a8;cursor:pointer;font-weight:700;";
+  addAllBtn.onclick = () => {
+    const current = parseTags(fTags.value);
+    fTags.value = [...new Set([...current, ...matched])].join(", ");
+    syncTagChips(); updatePreview(); importDlsiteTags();
+  };
+  dlsiteTagMatchBtns.appendChild(addAllBtn);
+
+  matched.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = `+ ${tag}`;
+    btn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.3);background:rgba(93,196,168,0.08);color:#5dc4a8;cursor:pointer;";
+    btn.onclick = () => {
+      const current = parseTags(fTags.value);
+      if (!current.includes(tag)) {
+        fTags.value = [...current, tag].join(", ");
+        syncTagChips(); updatePreview();
+      }
+      importDlsiteTags();
+    };
+    dlsiteTagMatchBtns.appendChild(btn);
+  });
+}
+
+dlsiteTagImportBtn.addEventListener("click", importDlsiteTags);
+dlsiteTagInput.addEventListener("keydown", e => { if (e.key === "Enter") importDlsiteTags(); });
+
 function clearForm() {
   exitEditMode();
   urlInput.value = fId.value = fTitle.value = fMaker.value = fCv.value = "";
   const sugg = document.getElementById("titleTagSuggestions");
   if (sugg) sugg.style.display = "none";
+  const dlMatches = document.getElementById("dlsiteTagMatches");
+  if (dlMatches) dlMatches.style.display = "none";
+  if (dlsiteTagInput) dlsiteTagInput.value = "";
   fPrice.value   = fImage.value = fTags.value = fDesc.value = fCta.value = "";
   rjHint.textContent = "";
   clearAllErrors();
