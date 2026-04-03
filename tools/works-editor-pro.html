@@ -702,6 +702,26 @@ select option { background: var(--surface2); }
               <input type="text" id="fCv" tabindex="7" placeholder="例：夏吉ゆうこ / 高野麻里佳" />
             </div>
 
+            <!-- DLsiteタグ取込 -->
+            <div class="field full">
+              <label>🏷️ DLsiteタグ取込
+                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">タグをそのまま貼り付けて照合</span>
+              </label>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="text" id="dlsiteTagInput"
+                  placeholder="例：ASMR 癒し バイノーラル/ダミヘ 耳かき"
+                  style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;" />
+                <button class="btn btn-ghost" id="dlsiteTagImportBtn"
+                  style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
+                  🔍 照合
+                </button>
+              </div>
+              <div id="dlsiteTagMatches" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;">
+                <span style="font-size:0.65rem;color:#5dc4a8;font-weight:700;">✅ 一致したタグ</span>
+                <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+              </div>
+            </div>
+
             <!-- タグ入力 + 候補チップ -->
             <div class="field full" id="fld-tags">
               <label>タグ（カンマ区切り）</label>
@@ -718,22 +738,6 @@ select option { background: var(--surface2); }
               <div id="titleTagSuggestions" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:6px;">
                 <span style="font-size:0.65rem;color:var(--amber);font-weight:700;">💡 タイトルに含まれるタグ候補</span>
                 <div id="titleTagSuggestionBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
-              </div>
-              <!-- DLsiteタグ取込 -->
-              <div style="margin-top:8px;">
-                <div style="display:flex;gap:6px;align-items:center;">
-                  <input type="text" id="dlsiteTagInput"
-                    placeholder="DLsiteのタグをここに貼り付け（例：ASMR 癒し バイノーラル/ダミヘ）"
-                    style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;" />
-                  <button class="btn btn-ghost" id="dlsiteTagImportBtn"
-                    style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
-                    🔍 照合
-                  </button>
-                </div>
-                <div id="dlsiteTagMatches" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;">
-                  <span style="font-size:0.65rem;color:#5dc4a8;font-weight:700;">✅ 一致したタグ</span>
-                  <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
-                </div>
               </div>
             </div>
 
