@@ -1622,8 +1622,29 @@
       const benefitText = getBenefitText(work);
       const ctaLead     = work.cta || "";
 
+      // TAG_GROUPS定義順でタグを並び替える
+      const TAG_ORDER = (() => {
+        const order = [];
+        // コアタグを先頭に
+        ["睡眠導入","癒し","甘々","R18","ほんのりR18"].forEach(t => order.push(t));
+        TAG_GROUPS.forEach(g => g.tags.forEach(t => { if (!order.includes(t)) order.push(t); }));
+        return order;
+      })();
+
+      function sortTagsByOrder(tags) {
+        return [...tags].sort((a, b) => {
+          const ia = TAG_ORDER.indexOf(a);
+          const ib = TAG_ORDER.indexOf(b);
+          if (ia === -1 && ib === -1) return 0;
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        });
+      }
+
       // ③ タグHTMLを生成（クリックで検索できるように data-tag 属性を付与）
-      const tagsHtml = work.tags.map(t => {
+      const sortedTags = sortTagsByOrder(work.tags);
+      const tagsHtml = sortedTags.map(t => {
         const isActive = getKeywords().includes(t);
         return `<span class="card-tag${isActive ? ' tag-active' : ''}" data-tag="${t}">${t}</span>`;
       }).join("");
@@ -2128,13 +2149,13 @@
       const R18_TAGS = new Set(["R18","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","耳舐め","ほんのりR18","言葉攻め"]);
 
       const TAG_GROUPS = [
-        { label: "🎧 表現",  tags: ["耳かき","耳舐め","囁き","バイノーラル","添い寝","自然音","雨音","マッサージ","読み聞かせ","環境音","ヘッドスパ"] },
+        { label: "🎧 表現",  tags: ["バイノーラル","耳かき","囁き","添い寝","マッサージ","ヘッドスパ","読み聞かせ","自然音","雨音","環境音"] },
         { label: "🎙️ 音質",  tags: ["KU100","高音質","立体音響"] },
-        { label: "✨ 体験",  tags: ["無言","低刺激","単調","没入感","長時間"] },
-        { label: "👤 キャラ", tags: ["お姉さん","妹系","幼なじみ","ヤンデレ","ツンデレ","母性","クール","ダウナー","メスガキ","ロリ","男の娘","ギャル","学生","巨乳","おねショタ"] },
-        { label: "🎭 シチュ", tags: ["NTR","百合","ファンタジー","サキュバス","催眠/トランス","異種族","学園","男性受け","逆転あり","コスプレ","ハーレム","強制","さっくり","日常/生活","特殊"] },
+        { label: "✨ 体験",  tags: ["無言","低刺激","単調","没入感","長時間","短時間"] },
+        { label: "👤 キャラ", tags: ["彼女","お姉さん","巨乳","ギャル","学生","ロリ","妹系","幼なじみ","ヤンデレ","ツンデレ","クール","ダウナー","メスガキ","男の娘","おねショタ","母性"] },
+        { label: "🎭 シチュ", tags: ["日常/生活","NTR","百合","ハーレム","学園","男性受け","コスプレ","ファンタジー","サキュバス","催眠/トランス","異種族","逆転あり","強制","さっくり","特殊"] },
         { label: "💫 ムード", tags: ["甘やかし","密着","いちゃいちゃ","甘々","癒し","睡眠導入","ほんのりR18"] },
-        { label: "🔞 行為",  tags: ["手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル"], r18: true },
+        { label: "🔞 行為",  tags: ["耳舐め","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","言葉攻め","オホ声"], r18: true },
       ];
 
       function makeTagBtn(tag) {

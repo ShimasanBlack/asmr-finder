@@ -714,6 +714,11 @@ select option { background: var(--surface2); }
               </div>
               <span class="field-err" id="err-tags"></span>
               <div class="tag-candidates" id="tagCandidates"></div>
+              <!-- タイトルからの自動候補 -->
+              <div id="titleTagSuggestions" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:6px;">
+                <span style="font-size:0.65rem;color:var(--amber);font-weight:700;">💡 タイトルに含まれるタグ候補</span>
+                <div id="titleTagSuggestionBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+              </div>
             </div>
 
             <div class="field full">
@@ -976,8 +981,7 @@ const ATTRIBUTES = {
   // 技術・表現方法
   tech: {
     label: "🎧 表現",
-    tags:  ["耳かき", "耳舐め", "囁き", "バイノーラル", "添い寝", "自然音",
-            "雨音", "マッサージ", "読み聞かせ", "環境音", "ヘッドスパ"],
+    tags:  ["バイノーラル", "耳かき", "囁き", "添い寝", "マッサージ", "ヘッドスパ", "読み聞かせ", "自然音", "雨音", "環境音"],
   },
   // 音質・収録環境
   quality: {
@@ -987,24 +991,22 @@ const ATTRIBUTES = {
   // 体験直結（睡眠・没入に直接効く）
   feel: {
     label: "✨ 体験",
-    tags:  ["無言", "低刺激", "単調", "没入感"],
+    tags:  ["無言", "低刺激", "単調", "没入感", "長時間", "短時間"],
   },
   // キャラクター属性
   character: {
     label: "👤 キャラ",
-    tags:  ["お姉さん", "妹系", "幼なじみ", "ヤンデレ", "ツンデレ",
-            "母性", "クール", "ダウナー", "メスガキ", "ロリ", "男の娘", "ギャル", "学生", "巨乳", "おねショタ"],
+    tags:  ["彼女", "お姉さん", "巨乳", "ギャル", "学生", "ロリ", "妹系", "幼なじみ", "ヤンデレ", "ツンデレ", "クール", "ダウナー", "メスガキ", "男の娘", "おねショタ", "母性"],
   },
   // シチュエーション
   situation: {
     label: "🎭 シチュ",
-    tags:  ["NTR", "百合", "ファンタジー", "サキュバス",
-            "催眠/トランス", "異種族", "学園", "男性受け", "逆転あり", "コスプレ", "ハーレム", "強制", "さっくり", "日常/生活", "特殊"],
+    tags:  ["日常/生活", "NTR", "百合", "ハーレム", "学園", "男性受け", "コスプレ", "ファンタジー", "サキュバス", "催眠/トランス", "異種族", "逆転あり", "強制", "さっくり", "特殊"],
   },
   // 行為・プレイ内容
   act: {
     label: "🔞 行為",
-    tags:  ["手コキ", "フェラチオ", "パイズリ", "中出し", "乳首責め", "オナサポ", "アナル", "言葉攻め"],
+    tags:  ["耳舐め", "手コキ", "フェラチオ", "パイズリ", "中出し", "乳首責め", "オナサポ", "アナル", "言葉攻め", "オホ声"],
   },
   // ムード・強度
   mood: {
@@ -1016,6 +1018,25 @@ const ATTRIBUTES = {
 
 // 後方互換：バリデーションで使うコアタグ一覧
 const CORE_TAG_KEYS = CORE_TYPES.map(c => c.key);
+
+// タグ定義順リスト（保存・表示時の並び替えに使用）
+const TAG_ORDER_EDITOR = (() => {
+  const order = [];
+  CORE_TYPES.forEach(c => order.push(c.key));
+  Object.values(ATTRIBUTES).forEach(g => g.tags.forEach(t => { if (!order.includes(t)) order.push(t); }));
+  return order;
+})();
+
+function sortTagsByOrder(tags) {
+  return [...tags].sort((a, b) => {
+    const ia = TAG_ORDER_EDITOR.indexOf(a);
+    const ib = TAG_ORDER_EDITOR.indexOf(b);
+    if (ia === -1 && ib === -1) return 0;
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
 
 // 現在選択中のコアタグ（デフォルト：睡眠導入）
 let selectedCore = "睡眠導入";
@@ -2100,7 +2121,47 @@ fTitle.addEventListener("input", () => {
     setAutoCTA(parseTags(fTags.value));
   }
   updatePreview();
+  updateTitleTagSuggestions();
 });
+
+// タイトルからタグ候補を検出してボタン表示
+function updateTitleTagSuggestions() {
+  const wrap = document.getElementById("titleTagSuggestions");
+  const btnWrap = document.getElementById("titleTagSuggestionBtns");
+  if (!wrap || !btnWrap) return;
+
+  const title = fTitle.value.trim();
+  if (!title) { wrap.style.display = "none"; return; }
+
+  // 全タグリストを収集
+  const allTags = Object.values(TAG_GROUPS).flatMap(g => g.tags ?? []);
+  const currentTags = new Set(parseTags(fTags.value));
+
+  // タイトルに含まれていて、まだ登録されていないタグを候補にする
+  const suggestions = allTags.filter(tag =>
+    title.includes(tag) && !currentTags.has(tag)
+  );
+
+  if (suggestions.length === 0) { wrap.style.display = "none"; return; }
+
+  wrap.style.display = "block";
+  btnWrap.innerHTML = "";
+  suggestions.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = `+ ${tag}`;
+    btn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(245,197,24,0.5);background:rgba(245,197,24,0.12);color:var(--amber);cursor:pointer;";
+    btn.onclick = () => {
+      const current = parseTags(fTags.value);
+      if (!current.includes(tag)) {
+        fTags.value = [...current, tag].join(", ");
+        syncTagChips();
+        updatePreview();
+      }
+      updateTitleTagSuggestions(); // 追加後に候補を更新
+    };
+    btnWrap.appendChild(btn);
+  });
+}
 
 // プレビューを更新するフィールド群（fTagsはCTA更新も兼ねるため下で登録）
 [fTitle, fDesc, fImage, fCta].forEach(el =>
@@ -2139,7 +2200,7 @@ function updatePreview() {
       <span>URLかタイトルを入力</span></div>`;
     return;
   }
-  const tagsHtml = tags.map(t => `<span class="preview-tag">${esc(t)}</span>`).join("");
+  const tagsHtml = sortTagsByOrder(tags).map(t => `<span class="preview-tag">${esc(t)}</span>`).join("");
   const imgHtml = img
     ? `<img class="preview-img" src="${esc(safeUrl(img))}" alt="${esc(title)}" onerror="this.style.display='none'">`
     : `<div class="preview-img" style="display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#2a3050">🎧</div>`;
@@ -2211,7 +2272,7 @@ function validateAndBuild() {
 
   if (!valid) return { valid: false };
 
-  const tags = parseTags(fTags.value);
+  const tags = sortTagsByOrder(parseTags(fTags.value));
 
   // コアタグ（CORE_TYPES のいずれか）が含まれているか確認
   if (!tags.some(t => CORE_TAG_KEYS.includes(t))) {
@@ -2231,7 +2292,7 @@ function validateAndBuild() {
       price:       Number(price) || 0,
       url:         safeUrl(url) || url, // ⑨ スキーム検証
       image:       safeUrl(imageVal) || "", // ⑨ 不正URLは空に
-      tags,        // validateAndBuild内でパース済みのものを使い回す
+      tags:        sortTagsByOrder(tags), // 定義順で保存
       description: fDesc.value.trim() || "",
       cta:         fCta.value.trim() || "今すぐ聴いて癒される",
       healing:     healingManual, // null=自動計算、0〜5=手動
@@ -2478,7 +2539,7 @@ function renderTable(force = false) {
       <div class="tbl-title" data-idx="${i}" title="${esc(w.title)}">${esc(w.title)}</div>
       <div class="tbl-id">${esc(w.id) || "—"}</div>
       <div class="tbl-price">${w.price ? Number(w.price).toLocaleString()+"円" : "—"}</div>
-      <div class="tbl-tags">${esc((w.tags||[]).slice(0,3).join(", "))}</div>
+      <div class="tbl-tags">${esc(sortTagsByOrder(w.tags||[]).slice(0,3).join(", "))}</div>
       <div class="tbl-actions">
         <button class="tbl-act-btn ext" data-act="ext" data-idx="${i}" title="DLsiteで開く">↗</button>
         <button class="tbl-act-btn del" data-act="del" data-idx="${i}" title="削除">✕</button>
@@ -2723,6 +2784,8 @@ clearFormBtn.addEventListener("click", () => {
 function clearForm() {
   exitEditMode();
   urlInput.value = fId.value = fTitle.value = fMaker.value = fCv.value = "";
+  const sugg = document.getElementById("titleTagSuggestions");
+  if (sugg) sugg.style.display = "none";
   fPrice.value   = fImage.value = fTags.value = fDesc.value = fCta.value = "";
   rjHint.textContent = "";
   clearAllErrors();
