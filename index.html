@@ -2389,7 +2389,8 @@
         if (topBtn)   topBtn.textContent = labels.btn;
 
         if (showR18) document.body.classList.remove("hide-r18");
-        else document.body.classList.add("hide-r18");
+        else {
+          document.body.classList.add("hide-r18");
           // R18タグで絞り込み中なら解除
           const r18TagSet = new Set(["R18","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","耳舐め","ほんのりR18","言葉攻め"]);
           const kws = getKeywords().filter(k => !r18TagSet.has(k));
