@@ -679,6 +679,11 @@ select option { background: var(--surface2); }
               <label>タイトル <span style="color:var(--red)">*</span></label>
               <input type="text" id="fTitle" tabindex="4" placeholder="作品タイトル" />
               <span class="field-err" id="err-title"></span>
+              <!-- タイトルからの自動候補（タイトル直下） -->
+              <div id="titleTagSuggestions" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:6px;">
+                <span style="font-size:0.65rem;color:var(--amber);font-weight:700;">💡 タイトルに含まれるタグ候補</span>
+                <div id="titleTagSuggestionBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+              </div>
             </div>
             <div class="field full">
               <label>サークル名</label>
@@ -702,25 +707,29 @@ select option { background: var(--surface2); }
               <input type="text" id="fCv" tabindex="7" placeholder="例：夏吉ゆうこ / 高野麻里佳" />
             </div>
 
-            <!-- DLsiteタグ取込 -->
+            <!-- DLsite作品情報一括取込 -->
             <div class="field full">
-              <label>🏷️ DLsiteタグ取込
-                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">タグをそのまま貼り付けて照合</span>
+              <label>📋 DLsite作品情報取込
+                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">DLsiteの作品情報をそのまま貼り付け</span>
               </label>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <input type="text" id="dlsiteTagInput"
-                  placeholder="例：ASMR 癒し バイノーラル/ダミヘ 耳かき"
-                  style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;" />
-                <button class="btn btn-ghost" id="dlsiteTagImportBtn"
-                  style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
-                  🔍 照合
+              <div style="display:flex;gap:6px;align-items:flex-start;">
+                <textarea id="dlsiteInfoInput" rows="4"
+                  placeholder="DLsiteの作品情報をここに貼り付け&#10;（サークル名・声優・ジャンルを自動抽出します）"
+                  style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;resize:vertical;"></textarea>
+                <button class="btn btn-ghost" id="dlsiteInfoImportBtn"
+                  style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;margin-top:0;">
+                  🔍 取込
                 </button>
               </div>
-              <div id="dlsiteTagMatches" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;">
-                <span style="font-size:0.65rem;color:#5dc4a8;font-weight:700;">✅ 一致したタグ</span>
-                <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+              <div id="dlsiteInfoResult" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;font-size:0.72rem;">
+                <div id="dlsiteInfoResultInner"></div>
+                <div id="dlsiteTagMatches" style="display:none;margin-top:6px;">
+                  <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+                </div>
               </div>
             </div>
+
+
 
             <!-- タグ入力 + 候補チップ -->
             <div class="field full" id="fld-tags">
@@ -734,11 +743,6 @@ select option { background: var(--surface2); }
               </div>
               <span class="field-err" id="err-tags"></span>
               <div class="tag-candidates" id="tagCandidates"></div>
-              <!-- タイトルからの自動候補 -->
-              <div id="titleTagSuggestions" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:6px;">
-                <span style="font-size:0.65rem;color:var(--amber);font-weight:700;">💡 タイトルに含まれるタグ候補</span>
-                <div id="titleTagSuggestionBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
-              </div>
             </div>
 
             <div class="field full">
@@ -2799,10 +2803,118 @@ clearFormBtn.addEventListener("click", () => {
 });
 
 // ─────────────────────────────────────────
+// DLsite作品情報一括取込
+// ─────────────────────────────────────────
+const dlsiteInfoInput     = document.getElementById("dlsiteInfoInput");
+const dlsiteInfoImportBtn = document.getElementById("dlsiteInfoImportBtn");
+const dlsiteInfoResult    = document.getElementById("dlsiteInfoResult");
+const dlsiteInfoResultInner = document.getElementById("dlsiteInfoResultInner");
+
+function extractDlsiteInfo(raw) {
+  const result = { maker: null, cv: [], tags: [] };
+
+  // サークル名抽出
+  const makerMatch = raw.match(/サークル名([^\n]+)/);
+  if (makerMatch) {
+    result.maker = makerMatch[1].replace(/フォローする[\d,，]+/, "").trim();
+  }
+
+  // 声優抽出（「声優」の後ろ・複数は「/」や「、」区切り）
+  const cvMatch = raw.match(/声優([^\n]+)/);
+  if (cvMatch) {
+    result.cv = cvMatch[1].split(/[\/、,，]/).map(s => s.trim()).filter(Boolean);
+  }
+
+  // ジャンル抽出
+  const genreMatch = raw.match(/ジャンル\s*\n?([^\n]+)/);
+  if (genreMatch) {
+    result.tags = genreMatch[1].trim().split(/\s+/).filter(Boolean);
+  }
+
+  return result;
+}
+
+function importDlsiteInfo() {
+  const raw = dlsiteInfoInput.value.trim();
+  if (!raw) return;
+
+  const extracted = extractDlsiteInfo(raw);
+  const lines = [];
+
+  // サークル名を登録
+  if (extracted.maker) {
+    if (!fMaker.value.trim()) {
+      fMaker.value = extracted.maker;
+      lines.push(`✅ サークル名: <strong>${extracted.maker}</strong>（登録済み）`);
+    } else {
+      lines.push(`⚠️ サークル名: <strong>${extracted.maker}</strong>（既に入力あり・スキップ）`);
+    }
+  }
+
+  // CVを登録
+  if (extracted.cv.length > 0) {
+    const cvStr = extracted.cv.join(" / ");
+    if (!fCv.value.trim()) {
+      fCv.value = cvStr;
+      lines.push(`✅ CV: <strong>${cvStr}</strong>（登録済み）`);
+    } else {
+      lines.push(`⚠️ CV: <strong>${cvStr}</strong>（既に入力あり・スキップ）`);
+    }
+  }
+
+  // タグ照合（既存のDLsiteタグ照合ロジックを流用）
+  if (extracted.tags.length > 0) {
+    const currentTags = new Set(parseTags(fTags.value));
+    const matched = ALL_DEFINED_TAGS.filter(def =>
+      extracted.tags.some(dl => dl === def || dl.includes(def) || def.includes(dl))
+      && !currentTags.has(def)
+    );
+
+    if (matched.length > 0) {
+      lines.push(`✅ タグ候補: ${matched.length}件一致`);
+      // dlsiteTagMatchBtnsに表示（既存のUIを再利用）
+      dlsiteTagMatches.style.display = "block";
+      dlsiteTagMatchBtns.innerHTML = "";
+
+      const addAllBtn = document.createElement("button");
+      addAllBtn.textContent = `+ すべて追加（${matched.length}件）`;
+      addAllBtn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.5);background:rgba(93,196,168,0.2);color:#5dc4a8;cursor:pointer;font-weight:700;";
+      addAllBtn.onclick = () => {
+        const current = parseTags(fTags.value);
+        fTags.value = [...new Set([...current, ...matched])].join(", ");
+        syncTagChips(); updatePreview(); importDlsiteTags();
+      };
+      dlsiteTagMatchBtns.appendChild(addAllBtn);
+
+      matched.forEach(tag => {
+        const btn = document.createElement("button");
+        btn.textContent = `+ ${tag}`;
+        btn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.3);background:rgba(93,196,168,0.08);color:#5dc4a8;cursor:pointer;";
+        btn.onclick = () => {
+          const current = parseTags(fTags.value);
+          if (!current.includes(tag)) {
+            fTags.value = [...current, tag].join(", ");
+            syncTagChips(); updatePreview();
+          }
+          importDlsiteTags();
+        };
+        dlsiteTagMatchBtns.appendChild(btn);
+      });
+    } else {
+      lines.push(`ℹ️ タグ: 一致するタグが見つかりませんでした`);
+    }
+  }
+
+  dlsiteInfoResult.style.display = "block";
+  dlsiteInfoResultInner.innerHTML = lines.join("<br>");
+  updatePreview();
+}
+
+dlsiteInfoImportBtn.addEventListener("click", importDlsiteInfo);
+
+// ─────────────────────────────────────────
 // DLsiteタグ照合
 // ─────────────────────────────────────────
-const dlsiteTagInput     = document.getElementById("dlsiteTagInput");
-const dlsiteTagImportBtn = document.getElementById("dlsiteTagImportBtn");
 const dlsiteTagMatches   = document.getElementById("dlsiteTagMatches");
 const dlsiteTagMatchBtns = document.getElementById("dlsiteTagMatchBtns");
 
@@ -2811,54 +2923,6 @@ const ALL_DEFINED_TAGS = [
   ...Object.values(ATTRIBUTES).flatMap(g => g.tags ?? [])
 ];
 
-function importDlsiteTags() {
-  const raw = dlsiteTagInput.value.trim();
-  if (!raw) return;
-
-  const dlTags = raw.split(/[\s　、,，\/]+/).map(t => t.trim()).filter(Boolean);
-  const currentTags = new Set(parseTags(fTags.value));
-
-  const matched = ALL_DEFINED_TAGS.filter(def =>
-    dlTags.some(dl => dl === def || dl.includes(def) || def.includes(dl))
-    && !currentTags.has(def)
-  );
-
-  dlsiteTagMatches.style.display = "block";
-  dlsiteTagMatchBtns.innerHTML = "";
-
-  if (matched.length === 0) {
-    dlsiteTagMatchBtns.innerHTML = '<span style="font-size:0.72rem;color:var(--muted);">一致するタグが見つかりませんでした</span>';
-    return;
-  }
-
-  const addAllBtn = document.createElement("button");
-  addAllBtn.textContent = `+ すべて追加（${matched.length}件）`;
-  addAllBtn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.5);background:rgba(93,196,168,0.2);color:#5dc4a8;cursor:pointer;font-weight:700;";
-  addAllBtn.onclick = () => {
-    const current = parseTags(fTags.value);
-    fTags.value = [...new Set([...current, ...matched])].join(", ");
-    syncTagChips(); updatePreview(); importDlsiteTags();
-  };
-  dlsiteTagMatchBtns.appendChild(addAllBtn);
-
-  matched.forEach(tag => {
-    const btn = document.createElement("button");
-    btn.textContent = `+ ${tag}`;
-    btn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.3);background:rgba(93,196,168,0.08);color:#5dc4a8;cursor:pointer;";
-    btn.onclick = () => {
-      const current = parseTags(fTags.value);
-      if (!current.includes(tag)) {
-        fTags.value = [...current, tag].join(", ");
-        syncTagChips(); updatePreview();
-      }
-      importDlsiteTags();
-    };
-    dlsiteTagMatchBtns.appendChild(btn);
-  });
-}
-
-dlsiteTagImportBtn.addEventListener("click", importDlsiteTags);
-dlsiteTagInput.addEventListener("keydown", e => { if (e.key === "Enter") importDlsiteTags(); });
 
 function clearForm() {
   exitEditMode();
@@ -2867,7 +2931,8 @@ function clearForm() {
   if (sugg) sugg.style.display = "none";
   const dlMatches = document.getElementById("dlsiteTagMatches");
   if (dlMatches) dlMatches.style.display = "none";
-  if (dlsiteTagInput) dlsiteTagInput.value = "";
+  if (dlsiteInfoInput) dlsiteInfoInput.value = "";
+  if (dlsiteInfoResult) dlsiteInfoResult.style.display = "none";
   fPrice.value   = fImage.value = fTags.value = fDesc.value = fCta.value = "";
   rjHint.textContent = "";
   clearAllErrors();
