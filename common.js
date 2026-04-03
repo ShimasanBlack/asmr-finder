@@ -51,6 +51,11 @@
     .common-box-finder .finder-title {
       font-size: .88rem; color: #888; margin-bottom: 10px;
     }
+
+    /* DLsiteブログパーツのスタイル漏れをリセット */
+    .dlsite-blogparts-wrap table { background: none !important; }
+    .dlsite-blogparts-wrap td { background: none !important; border: none !important; }
+    .dlsite-blogparts-wrap * { box-sizing: content-box !important; }
   `;
   document.head.appendChild(style);
 
@@ -74,6 +79,29 @@
       <p class="finder-title">もっと作品を探したい人はこちら</p>
       <a href="/index.html" class="btn-finder-common">→ 作品一覧を見る</a>
     `;
+
+    // DLsiteブログパーツのスタイル漏れを防ぐラッパー
+    const blogWrap = document.createElement("div");
+    blogWrap.className = "dlsite-blogparts-wrap";
+    blogWrap.style.cssText = "margin:24px 0;";
+
+    const caption = document.createElement("p");
+    caption.style.cssText = "font-size:.72rem;color:#bbb;margin-bottom:6px;text-align:right;";
+    caption.textContent = "Powered by DLsite";
+    blogWrap.appendChild(caption);
+
+    const s1 = document.createElement("script");
+    s1.type = "text/javascript";
+    s1.text = `blogparts={"base":"https://www.dlsite.com/","type":"ranking","site":"home","query":{"period":"year","options":[null,"-MEN"]},"title":"ランキング","display":"horizontal","detail":"1","column":"h","image":"medium","count":"5","wrapper":"0","autorotate":false,"aid":"ShimasanBlack"}`;
+
+    const s2 = document.createElement("script");
+    s2.type = "text/javascript";
+    s2.src = "https://www.dlsite.com/js/blogparts.js";
+    s2.charset = "UTF-8";
+
+    blogWrap.appendChild(s1);
+    blogWrap.appendChild(s2);
+    el.insertAdjacentElement("afterend", blogWrap);
   });
 
   // ──────────────────────────────────────
