@@ -2401,7 +2401,10 @@
         showR18 = !showR18;
         localStorage.setItem("showR18", showR18);
         applyR18State();
+        loadArticleBanners(); // R18切り替え時にバナーも再生成
       });
+
+      loadArticleBanners();
 
       renderHistory();
       renderCards();
@@ -2481,8 +2484,6 @@
         console.info("記事バナー: フォールバック表示中", e.message);
       }
     }
-
-    loadArticleBanners();
 
     init(); // 起動
   </script>
