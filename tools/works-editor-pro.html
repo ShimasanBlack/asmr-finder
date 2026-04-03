@@ -695,6 +695,12 @@ select option { background: var(--surface2); }
               <input type="url" id="fImage" tabindex="6" placeholder="https://img.dlsite.jp/..." />
               <span class="field-err" id="err-image"></span>
             </div>
+            <div class="field full">
+              <label>🎙️ CV（声優名）
+                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意・複数はカンマ区切り</span>
+              </label>
+              <input type="text" id="fCv" tabindex="7" placeholder="例：夏吉ゆうこ / 高野麻里佳" />
+            </div>
 
             <!-- タグ入力 + 候補チップ -->
             <div class="field full" id="fld-tags">
@@ -766,6 +772,7 @@ select option { background: var(--surface2); }
                style="width:100%;font-size:0.78rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;margin-bottom:6px;"
                autocomplete="off" />
         <div id="tagFilterBtns" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+        <div id="cvFilterBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;border-top:1px solid var(--border);padding-top:4px;"></div>
       </div>
 
       <!-- ④ テーブルヘッダー -->
@@ -875,6 +882,7 @@ const fPrice       = document.getElementById("fPrice");
 const fTitle       = document.getElementById("fTitle");
 const fMaker       = document.getElementById("fMaker");
 const fImage       = document.getElementById("fImage");
+const fCv          = document.getElementById("fCv");
 const fTags        = document.getElementById("fTags");
 const fDesc        = document.getElementById("fDesc");
 const fCta         = document.getElementById("fCta");
@@ -2219,6 +2227,7 @@ function validateAndBuild() {
       id,
       title,
       maker:       fMaker.value.trim() || "",
+      cv:          fCv.value.trim() ? fCv.value.trim().split("/").map(s => s.trim()).filter(Boolean) : undefined,
       price:       Number(price) || 0,
       url:         safeUrl(url) || url, // ⑨ スキーム検証
       image:       safeUrl(imageVal) || "", // ⑨ 不正URLは空に
@@ -2268,6 +2277,7 @@ function enterEditMode(idx) {
   fId.value       = w.id        || "";
   fTitle.value    = w.title     || "";
   fMaker.value    = w.maker     || "";
+  fCv.value       = (w.cv ?? []).join(" / ");
   fPrice.value    = w.price     || "";
   fImage.value    = w.image     || "";
   fTags.value     = (w.tags || []).join(", ");
@@ -2342,6 +2352,7 @@ updateBtn.addEventListener("click", () => {
   persist();
   clearDraft();
   buildTagFilterBtns();
+  buildCvFilterBtns();
   renderTable(true);
   updateJson();
   clearForm();
@@ -2361,12 +2372,41 @@ cancelEditBtn.addEventListener("click", () => {
 let lastRenderHash = "";
 
 let activeTagFilter = null;
+let activeCvFilter  = null;
+
+function buildCvFilterBtns() {
+  const wrap = document.getElementById("cvFilterBtns");
+  if (!wrap) return;
+  const allCvs = [...new Set(works.flatMap(w => w.cv ?? []))].sort((a, b) => a.localeCompare(b, 'ja'));
+  wrap.innerHTML = "";
+  if (allCvs.length === 0) return;
+
+  const label = document.createElement("span");
+  label.style.cssText = "font-size:0.65rem;color:var(--muted);padding:2px 4px;flex-shrink:0;";
+  label.textContent = "🎙️ CV:";
+  wrap.appendChild(label);
+
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "すべて";
+  allBtn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${activeCvFilter === null ? "var(--accent)" : "var(--surface2)"};color:${activeCvFilter === null ? "#fff" : "var(--muted)"};cursor:pointer;`;
+  allBtn.onclick = () => { activeCvFilter = null; buildCvFilterBtns(); renderTable(true); };
+  wrap.appendChild(allBtn);
+
+  allCvs.forEach(cv => {
+    const btn = document.createElement("button");
+    btn.textContent = cv;
+    const isActive = activeCvFilter === cv;
+    btn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${isActive ? "#e8819a" : "var(--surface2)"};color:${isActive ? "#fff" : "var(--muted)"};cursor:pointer;`;
+    btn.onclick = () => { activeCvFilter = isActive ? null : cv; buildCvFilterBtns(); renderTable(true); };
+    wrap.appendChild(btn);
+  });
+}
 
 function buildTagFilterBtns() {
   const wrap = document.getElementById("tagFilterBtns");
   if (!wrap) return;
   // 全タグを集計
-  const allTags = [...new Set(works.flatMap(w => w.tags ?? []))].sort();
+  const allTags = [...new Set(works.flatMap(w => w.tags ?? []))].sort((a, b) => a.localeCompare(b, 'ja'));
   wrap.innerHTML = "";
 
   // 「すべて」ボタン
@@ -2397,7 +2437,7 @@ function renderTable(force = false) {
 
   // ── フィルタリング ────────────────────────────────────
   const filterQ = listFilter.value.trim().toLowerCase();
-  const hash = works.length + "-" + selectedIdx + "-" + filterQ + "-" + (activeTagFilter ?? "")
+  const hash = works.length + "-" + selectedIdx + "-" + filterQ + "-" + (activeTagFilter ?? "") + "-" + (activeCvFilter ?? "")
              + "-" + (works[0]?.id ?? "") + "-" + (works[works.length-1]?.id ?? "");
   if (!force && hash === lastRenderHash) return;
   lastRenderHash = hash;
@@ -2408,11 +2448,12 @@ function renderTable(force = false) {
       (w.id    ?? "").toLowerCase().includes(filterQ) ||
       (w.tags  ?? []).some(t => t.toLowerCase().includes(filterQ));
     const matchTag = !activeTagFilter || (w.tags ?? []).includes(activeTagFilter);
-    return matchQ && matchTag;
+    const matchCv  = !activeCvFilter  || (w.cv  ?? []).includes(activeCvFilter);
+    return matchQ && matchTag && matchCv;
   });
 
   countBadge.textContent = `${works.length} 件`;
-  listCount.textContent  = (filterQ || activeTagFilter)
+  listCount.textContent  = (filterQ || activeTagFilter || activeCvFilter)
     ? `${visible.length}/${works.length}件`
     : `${works.length}件`;
 
@@ -2681,7 +2722,7 @@ clearFormBtn.addEventListener("click", () => {
 
 function clearForm() {
   exitEditMode();
-  urlInput.value = fId.value = fTitle.value = fMaker.value = "";
+  urlInput.value = fId.value = fTitle.value = fMaker.value = fCv.value = "";
   fPrice.value   = fImage.value = fTags.value = fDesc.value = fCta.value = "";
   rjHint.textContent = "";
   clearAllErrors();
@@ -3160,6 +3201,7 @@ works = loadFromLocal();
 
 buildTagChips();
 buildTagFilterBtns();
+buildCvFilterBtns();
 renderTable(true);
 updateJson();
 
