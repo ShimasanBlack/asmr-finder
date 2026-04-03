@@ -633,6 +633,28 @@ select option { background: var(--surface2); }
             <span class="rj-hint" id="rjHint"></span>
             <span class="field-err" id="err-url"></span>
           </div>
+
+          <!-- DLsite作品情報一括取込 -->
+          <div class="field full">
+            <label>📋 DLsite作品情報取込
+              <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">DLsiteの作品情報をそのまま貼り付け</span>
+            </label>
+            <div style="display:flex;gap:6px;align-items:flex-start;">
+              <textarea id="dlsiteInfoInput" rows="4"
+                placeholder="DLsiteの作品情報をここに貼り付け&#10;（作品名・サークル名・声優・ジャンルを自動抽出します）"
+                style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;resize:vertical;"></textarea>
+              <button class="btn btn-ghost" id="dlsiteInfoImportBtn"
+                style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;margin-top:0;">
+                🔍 取込
+              </button>
+            </div>
+            <div id="dlsiteInfoResult" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;font-size:0.72rem;">
+              <div id="dlsiteInfoResultInner"></div>
+              <div id="dlsiteTagMatches" style="display:none;margin-top:6px;">
+                <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 基本情報 -->
@@ -707,27 +729,6 @@ select option { background: var(--surface2); }
               <input type="text" id="fCv" tabindex="7" placeholder="例：夏吉ゆうこ / 高野麻里佳" />
             </div>
 
-            <!-- DLsite作品情報一括取込 -->
-            <div class="field full">
-              <label>📋 DLsite作品情報取込
-                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">DLsiteの作品情報をそのまま貼り付け</span>
-              </label>
-              <div style="display:flex;gap:6px;align-items:flex-start;">
-                <textarea id="dlsiteInfoInput" rows="4"
-                  placeholder="DLsiteの作品情報をここに貼り付け&#10;（サークル名・声優・ジャンルを自動抽出します）"
-                  style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;resize:vertical;"></textarea>
-                <button class="btn btn-ghost" id="dlsiteInfoImportBtn"
-                  style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;margin-top:0;">
-                  🔍 取込
-                </button>
-              </div>
-              <div id="dlsiteInfoResult" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;font-size:0.72rem;">
-                <div id="dlsiteInfoResultInner"></div>
-                <div id="dlsiteTagMatches" style="display:none;margin-top:6px;">
-                  <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
-                </div>
-              </div>
-            </div>
 
 
 
@@ -2811,24 +2812,37 @@ const dlsiteInfoResult    = document.getElementById("dlsiteInfoResult");
 const dlsiteInfoResultInner = document.getElementById("dlsiteInfoResultInner");
 
 function extractDlsiteInfo(raw) {
-  const result = { maker: null, cv: [], tags: [] };
+  const result = { title: null, maker: null, cv: [], tags: [] };
 
-  // サークル名抽出
+  // 作品名抽出（1行目）
+  const firstLine = raw.trim().split('\n')[0].trim();
+  if (firstLine) result.title = firstLine;
   const makerMatch = raw.match(/サークル名([^\n]+)/);
   if (makerMatch) {
     result.maker = makerMatch[1].replace(/フォローする[\d,，]+/, "").trim();
   }
 
-  // 声優抽出（「声優」の後ろ・複数は「/」や「、」区切り）
-  const cvMatch = raw.match(/声優([^\n]+)/);
+  // 声優抽出：「声優XXX年齢指定」のように次のキーワードまでで切る
+  const cvMatch = raw.match(/声優(.+?)(?:年齢指定|作品形式|ファイル形式|ジャンル|販売日|$)/s);
   if (cvMatch) {
-    result.cv = cvMatch[1].split(/[\/、,，]/).map(s => s.trim()).filter(Boolean);
+    const cvRaw = cvMatch[1].trim();
+    result.cv = cvRaw.split(/[\/、,，\n]/).map(s => s.trim()).filter(Boolean);
   }
 
-  // ジャンル抽出
-  const genreMatch = raw.match(/ジャンル\s*\n?([^\n]+)/);
-  if (genreMatch) {
-    result.tags = genreMatch[1].trim().split(/\s+/).filter(Boolean);
+  // タイトル行の【CV:XXX】形式も拾う（バックアップ）
+  if (result.cv.length === 0) {
+    const cvTitle = raw.match(/【CV[：:]\s*([^】]+)】/);
+    if (cvTitle) {
+      result.cv = cvTitle[1].split(/[\/・、]/).map(s => s.trim()).filter(Boolean);
+    }
+  }
+
+  // ジャンル抽出（「ジャンル」の次の行 or 同行）
+  const genreMatch = raw.match(/ジャンル\s*\n([^\n]+)/);
+  const genreMatchSameLine = raw.match(/ジャンル\s+([^\n]+)/);
+  const genreLine = genreMatch ? genreMatch[1] : (genreMatchSameLine ? genreMatchSameLine[1] : null);
+  if (genreLine) {
+    result.tags = genreLine.trim().split(/\s+/).filter(Boolean);
   }
 
   return result;
@@ -2840,6 +2854,17 @@ function importDlsiteInfo() {
 
   const extracted = extractDlsiteInfo(raw);
   const lines = [];
+
+  // 作品名を登録
+  if (extracted.title) {
+    if (!fTitle.value.trim()) {
+      fTitle.value = extracted.title;
+      updateTitleTagSuggestions();
+      lines.push(`✅ 作品名: <strong>${extracted.title.slice(0, 40)}${extracted.title.length > 40 ? '…' : ''}</strong>（登録済み）`);
+    } else {
+      lines.push(`⚠️ 作品名: <strong>${extracted.title.slice(0, 40)}${extracted.title.length > 40 ? '…' : ''}</strong>（既に入力あり・スキップ）`);
+    }
+  }
 
   // サークル名を登録
   if (extracted.maker) {
