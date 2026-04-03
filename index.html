@@ -1452,8 +1452,8 @@
           const db = b.createdAt ?? "";
           return db.localeCompare(da);
         }
-        const scoreA = (a.healing ?? 0) + (a.ero ?? 0);
-        const scoreB = (b.healing ?? 0) + (b.ero ?? 0);
+        const scoreA = a.tags?.includes("R18") ? (a.ero ?? 0) : (a.healing ?? 0);
+        const scoreB = b.tags?.includes("R18") ? (b.ero ?? 0) : (b.healing ?? 0);
         return scoreB - scoreA;
       });
 
@@ -1642,10 +1642,11 @@
           <p class="card-price" style="font-size:.75rem;color:var(--accent);font-weight:700;margin:-4px 0 6px;">${work.price ? `${Number(work.price).toLocaleString()}円` : ""}</p>
           <p class="card-desc" style="display:none">${work.description}</p>
           <div class="score-bars">
+            ${!work.tags?.includes("R18") ? `
             <div class="score-row">
               <span class="score-label">癒し度</span>
               <div class="stars">${healStars}</div>
-            </div>
+            </div>` : ""}
             ${(work.ero ?? 0) > 0 && showR18 ? `
             <div class="score-row">
               <span class="score-label">刺激度</span>
@@ -2401,8 +2402,8 @@
 
     function renderArticleBanners(articles) {
       const wrap = document.getElementById("articleBannerWrap");
-      // フォールバックを削除
-      wrap.querySelectorAll(".article-banner-fallback").forEach(el => el.remove());
+      // フォールバック・既存動的バナーを両方削除してから再生成
+      wrap.querySelectorAll(".article-banner-fallback, .article-banner-dynamic").forEach(el => el.remove());
 
       // R18非表示状態を考慮しつつpopular順に最大5件に絞る
       const visible = articles
