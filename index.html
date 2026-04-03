@@ -1212,6 +1212,11 @@
   <section class="ranking-section" id="rankingSection">
     <div class="ranking-header">
       <span class="ranking-title">Ranking</span>
+      <!-- R18トグル（上部） -->
+      <div class="r18-btn-wrap" style="margin:0;">
+        <span class="r18-status-badge" id="r18StatusBadgeTop">😴 全年齢・癒し系のみ表示中</span>
+        <button class="r18-show-btn" id="r18ShowBtnTop">🔞 大人向け作品も表示する</button>
+      </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
       <button class="ranking-tab-btn active" data-tab="heal">😴 癒し系</button>
@@ -1254,7 +1259,7 @@
         </div>
       </a>
       <a href="/articles/r18-amama-article.html" class="article-banner-fallback banner-r18" style="flex:0 0 200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(232,72,90,0.5);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='rgba(232,72,90,0.9)'" onmouseout="this.style.borderColor='rgba(232,72,90,0.5)'">
-        <span style="position:absolute;top:4px;left:4px;background:#e8485a;color:#fff;font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:4px;z-index:1;">🔞</span>
+        <span style="position:absolute;top:4px;left:4px;background:#e8485a;color:#fff;font-size:.9rem;font-weight:800;padding:2px 6px;border-radius:4px;z-index:1;">🔞</span>
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ01474000/RJ01473335_img_main.webp" alt="事務的メイド" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
         <div style="padding:10px 14px;">
           <p style="font-size:0.72rem;color:#e8485a;font-weight:700;margin-bottom:2px;">📝 記事</p>
@@ -1262,7 +1267,7 @@
         </div>
       </a>
       <a href="/articles/onasup-asmr-article.html" class="article-banner-fallback banner-r18" style="flex:0 0 200px;display:flex;align-items:center;gap:0;background:#13171f;border:1px solid rgba(232,72,90,0.5);border-radius:10px;text-decoration:none;overflow:hidden;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='rgba(232,72,90,0.9)'" onmouseout="this.style.borderColor='rgba(232,72,90,0.5)'">
-        <span style="position:absolute;top:4px;left:4px;background:#e8485a;color:#fff;font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:4px;z-index:1;">🔞</span>
+        <span style="position:absolute;top:4px;left:4px;background:#e8485a;color:#fff;font-size:.9rem;font-weight:800;padding:2px 6px;border-radius:4px;z-index:1;">🔞</span>
         <img src="https://img.dlsite.jp/modpub/images2/work/doujin/RJ01212000/RJ01211033_img_main.webp" alt="3min" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;">
         <div style="padding:10px 14px;">
           <p style="font-size:0.72rem;color:#e8485a;font-weight:700;margin-bottom:2px;">📝 記事</p>
@@ -2368,16 +2373,23 @@
       showR18 = localStorage.getItem("showR18") === "true";
 
       function applyR18State() {
-        if (showR18) {
-          document.body.classList.remove("hide-r18");
-          r18StatusBadge.textContent = "🔞 R18含むすべて表示中";
-          r18StatusBadge.classList.add("r18-on");
-          r18ShowBtn.textContent = "😴 全年齢のみに戻す";
-        } else {
-          document.body.classList.add("hide-r18");
-          r18StatusBadge.textContent = "😴 全年齢・癒し系のみ表示中";
-          r18StatusBadge.classList.remove("r18-on");
-          r18ShowBtn.textContent = "🔞 大人向け作品も表示する";
+        const labels = showR18
+          ? { badge: "🔞 R18含むすべて表示中", btn: "😴 全年齢のみに戻す" }
+          : { badge: "😴 全年齢・癒し系のみ表示中", btn: "🔞 大人向け作品も表示する" };
+
+        // 下部ボタン
+        r18StatusBadge.textContent = labels.badge;
+        r18StatusBadge.classList.toggle("r18-on", showR18);
+        r18ShowBtn.textContent = labels.btn;
+
+        // 上部ボタン
+        const topBadge = document.getElementById("r18StatusBadgeTop");
+        const topBtn   = document.getElementById("r18ShowBtnTop");
+        if (topBadge) { topBadge.textContent = labels.badge; topBadge.classList.toggle("r18-on", showR18); }
+        if (topBtn)   topBtn.textContent = labels.btn;
+
+        if (showR18) document.body.classList.remove("hide-r18");
+        else document.body.classList.add("hide-r18");
           // R18タグで絞り込み中なら解除
           const r18TagSet = new Set(["R18","手コキ","フェラチオ","パイズリ","中出し","乳首責め","オナサポ","アナル","耳舐め","ほんのりR18","言葉攻め"]);
           const kws = getKeywords().filter(k => !r18TagSet.has(k));
@@ -2402,7 +2414,15 @@
         showR18 = !showR18;
         localStorage.setItem("showR18", showR18);
         applyR18State();
-        loadArticleBanners(); // R18切り替え時にバナーも再生成
+        loadArticleBanners();
+      });
+
+      // 上部ボタンも同じ動作
+      document.getElementById("r18ShowBtnTop")?.addEventListener("click", () => {
+        showR18 = !showR18;
+        localStorage.setItem("showR18", showR18);
+        applyR18State();
+        loadArticleBanners();
       });
 
       loadArticleBanners();
@@ -2453,7 +2473,7 @@
         el.onmouseover = () => el.style.borderColor = hoverColor;
         el.onmouseout  = () => el.style.borderColor = borderColor;
         el.innerHTML = `
-          ${isR18 ? `<span style="position:absolute;top:4px;left:4px;background:#e8485a;color:#fff;font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:4px;z-index:1;">🔞</span>` : ""}
+          ${isR18 ? `<span style="position:absolute;top:4px;left:4px;background:#e8485a;color:#fff;font-size:.9rem;font-weight:800;padding:2px 6px;border-radius:4px;z-index:1;">🔞</span>` : ""}
           ${a.thumb ? `<img src="${a.thumb}" alt="${shortTitle}" style="width:72px;height:72px;object-fit:cover;flex-shrink:0;" loading="lazy">` : `<div style="width:72px;height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2rem;">${a.emoji}</div>`}
           <div style="padding:10px 14px;">
             <p style="font-size:0.72rem;color:${labelColor};font-weight:700;margin-bottom:2px;">📝 記事</p>
