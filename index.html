@@ -2335,23 +2335,6 @@
       setupHistory();
       renderPickup(works);
 
-      // ランキングタブ初期表示（癒し系）
-      renderRanking(works.filter(w => !w.tags?.includes("R18")), "healing", "rankingGrid");
-
-      // ランキングタブ切り替え
-      document.querySelectorAll(".ranking-tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".ranking-tab-btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          const tab = btn.dataset.tab;
-          if (tab === "heal") {
-            renderRanking(works.filter(w => !w.tags?.includes("R18")), "healing", "rankingGrid");
-          } else {
-            renderRanking(works.filter(w => w.tags?.includes("R18")), "ero", "rankingGrid");
-          }
-        });
-      });
-
       // R18表示ボタン（デフォルト非表示・ボタンで表示）
       const r18ShowBtn   = document.getElementById("r18ShowBtn");
       const r18StatusBadge = document.getElementById("r18StatusBadge");
@@ -2382,13 +2365,7 @@
           searchInput.value = kws.join(" ");
           renderBadges(kws);
         }
-        // ランキングも切り替え
-        const activeRankTab = document.querySelector(".ranking-tab-btn.active");
-        if (activeRankTab) {
-          const tab = activeRankTab.dataset.tab;
-          if (tab === "heal") renderRanking(works.filter(w => !w.tags?.includes("R18")), "healing", "rankingGrid");
-          else renderRanking(works.filter(w => w.tags?.includes("R18")), "ero", "rankingGrid");
-        }
+        // ランキングも切り替え（削除済み）
         buildTagButtons();
         currentPage = 1;
         renderCards();
