@@ -51,11 +51,6 @@
     .common-box-finder .finder-title {
       font-size: .88rem; color: #888; margin-bottom: 10px;
     }
-
-    /* DLsiteブログパーツのスタイル漏れをリセット */
-    .dlsite-blogparts-wrap table { background: none !important; }
-    .dlsite-blogparts-wrap td { background: none !important; border: none !important; }
-    .dlsite-blogparts-wrap * { box-sizing: content-box !important; }
   `;
   document.head.appendChild(style);
 
@@ -80,15 +75,10 @@
       <a href="/index.html" class="btn-finder-common">→ 作品一覧を見る</a>
     `;
 
-    // DLsiteブログパーツのスタイル漏れを防ぐラッパー
+    // DLsiteランキングブログパーツを直後に挿入
     const blogWrap = document.createElement("div");
-    blogWrap.className = "dlsite-blogparts-wrap";
-    blogWrap.style.cssText = "margin:24px 0;";
-
-    const caption = document.createElement("p");
-    caption.style.cssText = "font-size:.72rem;color:#bbb;margin-bottom:6px;text-align:right;";
-    caption.textContent = "Powered by DLsite";
-    blogWrap.appendChild(caption);
+    blogWrap.style.cssText = "margin: 24px 0;";
+    blogWrap.innerHTML = `<p style="font-size:.72rem;color:#bbb;margin-bottom:6px;text-align:right;">Powered by DLsite</p>`;
 
     const s1 = document.createElement("script");
     s1.type = "text/javascript";
