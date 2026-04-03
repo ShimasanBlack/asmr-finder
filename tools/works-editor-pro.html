@@ -671,6 +671,18 @@ select option { background: var(--surface2); }
               <input type="number" id="fPrice" tabindex="3" placeholder="880" min="0" />
               <span class="field-err" id="err-price"></span>
             </div>
+            <div class="field">
+              <label>⭐ 評価
+                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意（例：4.91）</span>
+              </label>
+              <input type="number" id="fRating" min="0" max="5" step="0.01" placeholder="4.91" />
+            </div>
+            <div class="field">
+              <label>📦 販売数
+                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意</span>
+              </label>
+              <input type="number" id="fSales" min="0" step="1" placeholder="2526" />
+            </div>
 
             <!-- 癒し度・刺激度（空欄=自動計算） -->
             <div class="field">
@@ -913,6 +925,8 @@ const fTitle       = document.getElementById("fTitle");
 const fMaker       = document.getElementById("fMaker");
 const fImage       = document.getElementById("fImage");
 const fCv          = document.getElementById("fCv");
+const fRating      = document.getElementById("fRating");
+const fSales       = document.getElementById("fSales");
 const fTags        = document.getElementById("fTags");
 const fDesc        = document.getElementById("fDesc");
 const fCta         = document.getElementById("fCta");
@@ -2312,6 +2326,8 @@ function validateAndBuild() {
       maker:       fMaker.value.trim() || "",
       cv:          fCv.value.trim() ? fCv.value.trim().split("/").map(s => s.trim()).filter(Boolean) : undefined,
       price:       Number(price) || 0,
+      rating:      fRating.value ? Number(fRating.value) : undefined,
+      sales:       fSales.value  ? Number(fSales.value)  : undefined,
       url:         safeUrl(url) || url, // ⑨ スキーム検証
       image:       safeUrl(imageVal) || "", // ⑨ 不正URLは空に
       tags:        sortTagsByOrder(tags), // 定義順で保存
@@ -2361,6 +2377,8 @@ function enterEditMode(idx) {
   fTitle.value    = w.title     || "";
   fMaker.value    = w.maker     || "";
   fCv.value       = (w.cv ?? []).join(" / ");
+  fRating.value   = w.rating    ?? "";
+  fSales.value    = w.sales     ?? "";
   fPrice.value    = w.price     || "";
   fImage.value    = w.image     || "";
   fTags.value     = (w.tags || []).join(", ");
@@ -2812,38 +2830,31 @@ const dlsiteInfoResult    = document.getElementById("dlsiteInfoResult");
 const dlsiteInfoResultInner = document.getElementById("dlsiteInfoResultInner");
 
 function extractDlsiteInfo(raw) {
-  const result = { title: null, maker: null, cv: [], tags: [] };
+  const result = { title: null, maker: null, cv: [], tags: [], rating: null, sales: null };
 
-  // 作品名抽出（1行目）
   const firstLine = raw.trim().split('\n')[0].trim();
   if (firstLine) result.title = firstLine;
+
   const makerMatch = raw.match(/サークル名([^\n]+)/);
-  if (makerMatch) {
-    result.maker = makerMatch[1].replace(/フォローする[\d,，]+/, "").trim();
-  }
+  if (makerMatch) result.maker = makerMatch[1].replace(/フォローする[\d,，]+/, "").trim();
 
-  // 声優抽出：「声優XXX年齢指定」のように次のキーワードまでで切る
   const cvMatch = raw.match(/声優(.+?)(?:年齢指定|作品形式|ファイル形式|ジャンル|販売日|$)/s);
-  if (cvMatch) {
-    const cvRaw = cvMatch[1].trim();
-    result.cv = cvRaw.split(/[\/、,，\n]/).map(s => s.trim()).filter(Boolean);
-  }
-
-  // タイトル行の【CV:XXX】形式も拾う（バックアップ）
-  if (result.cv.length === 0) {
+  if (cvMatch) result.cv = cvMatch[1].trim().split(/[\/、,，\n]/).map(s => s.trim()).filter(Boolean);
+  if (!result.cv.length) {
     const cvTitle = raw.match(/【CV[：:]\s*([^】]+)】/);
-    if (cvTitle) {
-      result.cv = cvTitle[1].split(/[\/・、]/).map(s => s.trim()).filter(Boolean);
-    }
+    if (cvTitle) result.cv = cvTitle[1].split(/[\/・、]/).map(s => s.trim()).filter(Boolean);
   }
 
-  // ジャンル抽出（「ジャンル」の次の行 or 同行）
   const genreMatch = raw.match(/ジャンル\s*\n([^\n]+)/);
-  const genreMatchSameLine = raw.match(/ジャンル\s+([^\n]+)/);
-  const genreLine = genreMatch ? genreMatch[1] : (genreMatchSameLine ? genreMatchSameLine[1] : null);
-  if (genreLine) {
-    result.tags = genreLine.trim().split(/\s+/).filter(Boolean);
-  }
+  const genreMatchSL = raw.match(/ジャンル\s+([^\n]+)/);
+  const genreLine = genreMatch ? genreMatch[1] : (genreMatchSL ? genreMatchSL[1] : null);
+  if (genreLine) result.tags = genreLine.trim().split(/\s+/).filter(Boolean);
+
+  const salesMatch = raw.match(/販売数：\s*\n?([\d,，]+)/);
+  if (salesMatch) result.sales = Number(salesMatch[1].replace(/[,，]/g, ""));
+
+  const ratingMatch = raw.match(/評価：\s*\n?([\d.]+)/);
+  if (ratingMatch) result.rating = Number(ratingMatch[1]);
 
   return result;
 }
@@ -2884,6 +2895,26 @@ function importDlsiteInfo() {
       lines.push(`✅ CV: <strong>${cvStr}</strong>（登録済み）`);
     } else {
       lines.push(`⚠️ CV: <strong>${cvStr}</strong>（既に入力あり・スキップ）`);
+    }
+  }
+
+  // 評価を登録
+  if (extracted.rating) {
+    if (!fRating.value) {
+      fRating.value = extracted.rating;
+      lines.push(`✅ 評価: <strong>★ ${extracted.rating}</strong>（登録済み）`);
+    } else {
+      lines.push(`⚠️ 評価: <strong>★ ${extracted.rating}</strong>（既に入力あり・スキップ）`);
+    }
+  }
+
+  // 販売数を登録
+  if (extracted.sales) {
+    if (!fSales.value) {
+      fSales.value = extracted.sales;
+      lines.push(`✅ 販売数: <strong>${extracted.sales.toLocaleString()}</strong>（登録済み）`);
+    } else {
+      lines.push(`⚠️ 販売数: <strong>${extracted.sales.toLocaleString()}</strong>（既に入力あり・スキップ）`);
     }
   }
 
@@ -2951,7 +2982,7 @@ const ALL_DEFINED_TAGS = [
 
 function clearForm() {
   exitEditMode();
-  urlInput.value = fId.value = fTitle.value = fMaker.value = fCv.value = "";
+  urlInput.value = fId.value = fTitle.value = fMaker.value = fCv.value = fRating.value = fSales.value = "";
   const sugg = document.getElementById("titleTagSuggestions");
   if (sugg) sugg.style.display = "none";
   const dlMatches = document.getElementById("dlsiteTagMatches");

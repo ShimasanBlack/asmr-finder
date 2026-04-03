@@ -1661,7 +1661,11 @@
           ${getClickLabel(work.id)}
           <div class="card-tags">${tagsHtml}</div>
           <p class="card-title">${work.title}</p>
-          <p class="card-price" style="font-size:.75rem;color:var(--accent);font-weight:700;margin:-4px 0 6px;">${work.price ? `${Number(work.price).toLocaleString()}円` : ""}</p>
+          <p class="card-price" style="font-size:.75rem;color:var(--accent);font-weight:700;margin:-4px 0 4px;">${work.price ? `${Number(work.price).toLocaleString()}円` : ""}</p>
+          ${(work.rating || work.sales) ? `<p style="font-size:.72rem;color:var(--muted);margin:0 0 6px;display:flex;gap:8px;">
+            ${work.rating ? `<span style="color:#f5c518;font-weight:700;">★ ${work.rating}</span>` : ""}
+            ${work.sales ? `<span>販売数 ${Number(work.sales).toLocaleString()}</span>` : ""}
+          </p>` : ""}
           <p class="card-desc" style="display:none">${work.description}</p>
           <div class="score-bars">
             ${!work.tags?.includes("R18") ? `
