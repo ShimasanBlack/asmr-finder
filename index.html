@@ -38,7 +38,7 @@
       --text:      #d8e0ec;       /* 本文テキスト */
       --muted:     #6b7a96;       /* 薄いテキスト */
       --heal-col:  #5dc4a8;       /* 癒し度バー（緑） */
-      --ero-col:   #e8819a;       /* 抜き度バー（ピンク） */
+      --ero-col:   #e8819a;       /* 刺激度バー（ピンク） */
       --font-jp:   'Zen Kaku Gothic New', sans-serif;
       --font-en:   'Cormorant Garamond', serif;
       --radius:    12px;
@@ -508,7 +508,7 @@
       gap: 6px;
     }
 
-    /* 「癒し度」「抜き度」ラベル */
+    /* 「癒し度」「刺激度」ラベル */
     .score-label {
       font-size: 0.67rem;
       color: var(--muted);
@@ -533,7 +533,7 @@
 
     /* 塗り★の色：種類ごとに変える */
     .star.filled.heal { color: var(--heal-col); }   /* 癒し度 → 緑 */
-    .star.filled.ero  { color: var(--ero-col);  }   /* 抜き度 → ピンク */
+    .star.filled.ero  { color: var(--ero-col);  }   /* 刺激度 → ピンク */
 
     /* =====================================================
        CTAボタン（ベネフィット型・2段構成）
@@ -1208,12 +1208,6 @@
   <!-- ===== ② 「迷ったらこれ」ピックアップ（JSで動的に生成） ===== -->
   <section class="pickup-section" id="pickupSection" style="display:none"></section>
 
-  <!-- DLsite ランキングブログパーツ -->
-  <div style="margin: 24px 0;">
-    <p style="font-size:.75rem;color:var(--muted);margin-bottom:8px;text-align:right;">Powered by DLsite</p>
-    <script type="text/javascript">blogparts={"base":"https://www.dlsite.com/","type":"ranking","site":"home","query":{"period":"year","options":[null,"-MEN"]},"title":"ランキング","display":"horizontal","detail":"1","column":"h","image":"medium","count":"5","wrapper":"0","autorotate":false,"aid":"ShimasanBlack"}</script><script type="text/javascript" src="https://www.dlsite.com/js/blogparts.js" charset="UTF-8"></script>
-  </div>
-
   <!-- ===== 総合ランキング（JSで動的に生成） ===== -->
   <section class="ranking-section" id="rankingSection">
     <div class="ranking-header">
@@ -1678,7 +1672,7 @@
             </div>
             ${(work.ero ?? 0) > 0 && showR18 ? `
             <div class="score-row">
-              <span class="score-label">抜き度</span>
+              <span class="score-label">刺激度</span>
               <div class="stars">${eroStars}</div>
             </div>` : ""}
           </div>
@@ -1792,7 +1786,7 @@
             </div>
             ${(work.ero ?? 0) > 0 && showR18 ? `
             <div class="rank-score-row">
-              <span class="rank-score-label">抜き度</span>
+              <span class="rank-score-label">刺激度</span>
               <span style="font-size:0.65rem;letter-spacing:-1px;">${eroStars}</span>
             </div>` : ""}
           </div>
@@ -1915,7 +1909,7 @@
               </div>
               ${(top.ero ?? 0) > 0 && showR18 ? `
               <div class="pickup-score-item">
-                <span class="pickup-score-label">抜き度</span>
+                <span class="pickup-score-label">刺激度</span>
                 <span class="pickup-score-stars">${eroStars}</span>
               </div>` : ""}
             </div>
@@ -2405,6 +2399,12 @@
       // フォールバックを削除
       wrap.querySelectorAll(".article-banner-fallback").forEach(el => el.remove());
 
+      // R18非表示状態を考慮しつつpopular順に最大5件に絞る
+      const visible = articles
+        .filter(a => !a.r18 || showR18)
+        .sort((a, b) => (b.popular ?? 0) - (a.popular ?? 0))
+        .slice(0, 5);
+
       const accentColors = {
         "sleep":     "rgba(126,184,212,0.5)",
         "selection": "rgba(230,126,34,0.5)",
@@ -2416,7 +2416,7 @@
         "ranking":   "#e8485a",
       };
 
-      articles.forEach(a => {
+      visible.forEach(a => {
         const isR18 = R18_ARTICLE_IDS.has(a.id);
         const accent = accentColors[a.cat] ?? "rgba(126,184,212,0.5)";
         const labelColor = labelColors[a.cat] ?? "#7eb8d4";

@@ -650,7 +650,7 @@ select option { background: var(--surface2); }
               <span class="field-err" id="err-price"></span>
             </div>
 
-            <!-- 癒し度・抜き度（空欄=自動計算） -->
+            <!-- 癒し度・刺激度（空欄=自動計算） -->
             <div class="field">
               <label>💚 癒し度
                 <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">（空欄で自動）</span>
@@ -664,7 +664,7 @@ select option { background: var(--surface2); }
               </div>
             </div>
             <div class="field">
-              <label>🔞 抜き度
+              <label>🔞 刺激度
                 <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">（空欄で自動）</span>
               </label>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -882,7 +882,7 @@ const fEro         = document.getElementById("fEro");
 const fHealingVal  = document.getElementById("fHealingVal");
 const fEroVal      = document.getElementById("fEroVal");
 
-// 癒し度・抜き度スライダー管理
+// 癒し度・刺激度スライダー管理
 // null = 自動計算、0〜5 = 手動設定
 let healingManual = null;
 let eroManual     = null;
@@ -926,7 +926,7 @@ document.getElementById("clearEroBtn").addEventListener("click", () => {
   eroManual = null;
   updateEroDisplay(null);
   saveDraft();
-  showToast("抜き度を自動計算に戻しました", "ok");
+  showToast("刺激度を自動計算に戻しました", "ok");
 });
 const addBtn       = document.getElementById("addBtn");
 const updateBtn    = document.getElementById("updateBtn");
@@ -1621,6 +1621,31 @@ const CTA_BASE_R18_AMAMA = [
   "優しくえっちされたい夜はこれ一択。",
 ];
 
+// オナサポ記事用CTA（軽め・強め2段階構成）
+const CTA_BASE_ONASAPO_LIGHT = [
+  "とりあえず試聴だけでもOK。",
+  "気になるなら1分だけ聴いてみる。",
+  "イヤホン推奨。没入感を体験する。",
+  "目を閉じて再生するだけ。",
+  "耳元の距離感、想像以上です。",
+  "このシチュ好きなら刺さる。",
+  "初めてならこの1本でOK。",
+  "迷ったらこれを選べば間違いない。",
+];
+
+const CTA_BASE_ONASAPO_STRONG = [
+  "満足感が段違い。まずはこれから。",
+  "しっかり満足したい人はこちら。",
+  "一度聴くと戻れないタイプ。",
+  "今日はこれでリセットする。",
+  "一人の時間をもっと満たしたいなら。",
+  "ハマる人は一発でハマる。",
+  "他と違う「濃さ」を試してみる。",
+  "「物足りなさ」を感じてる人へ。",
+  "この距離感、クセになります。",
+  "今夜これで決める。",
+];
+
 // R18甘々判定に使うムードタグ
 // R18用フレーズ（タグ別）
 const CTA_TAG_PHRASES_R18 = {
@@ -1647,7 +1672,9 @@ const CTA_TAG_PHRASES_R18 = {
   "オナサポ":  ["一緒にペースを作ってくれる構成で、使いやすい作品です。",
                 "テンポが良くて、最初から最後まで引き込まれます。",
                 "ペースを合わせてくれる構成が絶妙です。",
-                "使いやすくて、気づいたら最後まで聴いてます。"],
+                "使いやすくて、気づいたら最後まで聴いてます。",
+                "没入感が高くて、耳元の距離感が想像以上です。",
+                "一人の時間をしっかり満たしてくれるタイプ。"],
   "バイノーラル": ["イヤホンで聴くと頭の中で音が広がって、没入感が段違いです。",
                 "立体音響で臨場感がまるで違います。",
                 "音が頭の中に広がって、気づいたら没頭しています。",
@@ -1782,6 +1809,18 @@ function generateCta(tags) {
   if (!tags || tags.length === 0) return "迷ったらまずこれ。再生してそのまま眠れます。";
 
   const core = getCoreTag(tags);
+
+  // さっくり×オナサポ 組み合わせ専用CTA
+  if (tags.includes("さっくり") && tags.includes("オナサポ")) {
+    const phrases = [
+      "短時間でしっかり満足できるタイプ。",
+      "サクッと済ませたい夜はこれ一択。",
+      "時間がなくてもこれで十分。",
+      "短くてもちゃんと満足できる。",
+      "コンパクトなのに満足感が高い。",
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
 
   // ニッチシチュタグ検知（優先判定）
   const NICHE_TAGS = new Set(["NTR","百合","男の娘","サキュバス","メスガキ","男性受け","逆転あり","催眠/トランス","異種族","乳首責め","強制","ヤンデレ","ハーレム"]);
@@ -2196,7 +2235,7 @@ function enterEditMode(idx) {
   fCta.value      = w.cta       || "";
   rjHint.textContent = w.id ? `✅ ${w.id}` : "";
 
-  // 癒し度・抜き度の復元（null=自動計算）
+  // 癒し度・刺激度の復元（null=自動計算）
   healingManual = (w.healing != null) ? w.healing : null;
   eroManual     = (w.ero     != null) ? w.ero     : null;
   updateHealingDisplay(healingManual);
@@ -2583,7 +2622,7 @@ function clearForm() {
   updatePreview();
   selectedIdx = -1;
   isAutoCTA = true;
-  // 癒し度・抜き度をリセット（自動計算モードに戻す）
+  // 癒し度・刺激度をリセット（自動計算モードに戻す）
   healingManual = null;
   eroManual     = null;
   updateHealingDisplay(null);
