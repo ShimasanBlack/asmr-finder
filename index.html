@@ -2320,7 +2320,8 @@
 
           // ボーナス：KU100・低刺激・無言
           const bonus = (tags.has("KU100") || tags.has("低刺激") || tags.has("無言")) ? 1 : 0;
-          autoHealing = Math.min(5, Math.max(3, autoHealing + bonus));
+          const healMin = tags.has("R18") ? 2 : 3;
+          autoHealing = Math.min(5, Math.max(healMin, autoHealing + bonus));
 
           return {
             ...w,
