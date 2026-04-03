@@ -2882,7 +2882,7 @@ function importDlsiteInfo() {
       addAllBtn.onclick = () => {
         const current = parseTags(fTags.value);
         fTags.value = [...new Set([...current, ...matched])].join(", ");
-        syncTagChips(); updatePreview(); importDlsiteTags();
+        syncTagChips(); updatePreview(); importDlsiteInfo();
       };
       dlsiteTagMatchBtns.appendChild(addAllBtn);
 
@@ -2896,7 +2896,7 @@ function importDlsiteInfo() {
             fTags.value = [...current, tag].join(", ");
             syncTagChips(); updatePreview();
           }
-          importDlsiteTags();
+          importDlsiteInfo();
         };
         dlsiteTagMatchBtns.appendChild(btn);
       });
