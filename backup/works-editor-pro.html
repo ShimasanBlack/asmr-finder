@@ -650,7 +650,7 @@ select option { background: var(--surface2); }
               <span class="field-err" id="err-price"></span>
             </div>
 
-            <!-- 癒し度・抜き度（空欄=自動計算） -->
+            <!-- 癒し度・刺激度（空欄=自動計算） -->
             <div class="field">
               <label>💚 癒し度
                 <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">（空欄で自動）</span>
@@ -664,7 +664,7 @@ select option { background: var(--surface2); }
               </div>
             </div>
             <div class="field">
-              <label>🔞 抜き度
+              <label>🔞 刺激度
                 <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">（空欄で自動）</span>
               </label>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -695,6 +695,12 @@ select option { background: var(--surface2); }
               <input type="url" id="fImage" tabindex="6" placeholder="https://img.dlsite.jp/..." />
               <span class="field-err" id="err-image"></span>
             </div>
+            <div class="field full">
+              <label>🎙️ CV（声優名）
+                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意・複数は / 区切り</span>
+              </label>
+              <input type="text" id="fCv" tabindex="7" placeholder="例：夏吉ゆうこ / 高野麻里佳" />
+            </div>
 
             <!-- タグ入力 + 候補チップ -->
             <div class="field full" id="fld-tags">
@@ -708,6 +714,27 @@ select option { background: var(--surface2); }
               </div>
               <span class="field-err" id="err-tags"></span>
               <div class="tag-candidates" id="tagCandidates"></div>
+              <!-- タイトルからの自動候補 -->
+              <div id="titleTagSuggestions" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:6px;">
+                <span style="font-size:0.65rem;color:var(--amber);font-weight:700;">💡 タイトルに含まれるタグ候補</span>
+                <div id="titleTagSuggestionBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+              </div>
+              <!-- DLsiteタグ取込 -->
+              <div style="margin-top:8px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input type="text" id="dlsiteTagInput"
+                    placeholder="DLsiteのタグをここに貼り付け（例：ASMR 癒し バイノーラル/ダミヘ）"
+                    style="flex:1;font-size:0.75rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;" />
+                  <button class="btn btn-ghost" id="dlsiteTagImportBtn"
+                    style="padding:5px 12px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
+                    🔍 照合
+                  </button>
+                </div>
+                <div id="dlsiteTagMatches" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(93,196,168,0.08);border:1px solid rgba(93,196,168,0.3);border-radius:6px;">
+                  <span style="font-size:0.65rem;color:#5dc4a8;font-weight:700;">✅ 一致したタグ</span>
+                  <div id="dlsiteTagMatchBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
+                </div>
+              </div>
             </div>
 
             <div class="field full">
@@ -763,8 +790,10 @@ select option { background: var(--surface2); }
       <div style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--surface);">
         <input type="text" id="listFilter"
                placeholder="🔍 タイトル / ID / タグで絞り込み"
-               style="width:100%;font-size:0.78rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;"
+               style="width:100%;font-size:0.78rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;margin-bottom:6px;"
                autocomplete="off" />
+        <div id="tagFilterBtns" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+        <div id="cvFilterBtns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;border-top:1px solid var(--border);padding-top:4px;"></div>
       </div>
 
       <!-- ④ テーブルヘッダー -->
@@ -874,6 +903,7 @@ const fPrice       = document.getElementById("fPrice");
 const fTitle       = document.getElementById("fTitle");
 const fMaker       = document.getElementById("fMaker");
 const fImage       = document.getElementById("fImage");
+const fCv          = document.getElementById("fCv");
 const fTags        = document.getElementById("fTags");
 const fDesc        = document.getElementById("fDesc");
 const fCta         = document.getElementById("fCta");
@@ -882,7 +912,7 @@ const fEro         = document.getElementById("fEro");
 const fHealingVal  = document.getElementById("fHealingVal");
 const fEroVal      = document.getElementById("fEroVal");
 
-// 癒し度・抜き度スライダー管理
+// 癒し度・刺激度スライダー管理
 // null = 自動計算、0〜5 = 手動設定
 let healingManual = null;
 let eroManual     = null;
@@ -926,7 +956,7 @@ document.getElementById("clearEroBtn").addEventListener("click", () => {
   eroManual = null;
   updateEroDisplay(null);
   saveDraft();
-  showToast("抜き度を自動計算に戻しました", "ok");
+  showToast("刺激度を自動計算に戻しました", "ok");
 });
 const addBtn       = document.getElementById("addBtn");
 const updateBtn    = document.getElementById("updateBtn");
@@ -964,49 +994,59 @@ const CORE_TYPES = [
 
 // ATTRIBUTES：属性・フィルタ（複数選択OK）
 const ATTRIBUTES = {
-  // 技術・表現方法
-  tech: {
+  hyougen: {
     label: "🎧 表現",
-    tags:  ["耳かき", "耳舐め", "囁き", "バイノーラル", "添い寝", "自然音",
-            "雨音", "マッサージ", "読み聞かせ", "環境音", "ヘッドスパ"],
+    tags:  ["バイノーラル", "KU100", "高音質", "立体音響"],
   },
-  // 音質・収録環境
-  quality: {
-    label: "🎙️ 音質",
-    tags:  ["KU100", "高音質", "立体音響"],
-  },
-  // 体験直結（睡眠・没入に直接効く）
-  feel: {
+  taiken: {
     label: "✨ 体験",
-    tags:  ["無言", "低刺激", "単調", "没入感"],
+    tags:  ["低刺激", "没入感", "長時間", "短時間", "睡眠導入", "自然音", "雨音", "環境音", "ストーリー重視"],
   },
-  // キャラクター属性
-  character: {
+  chara: {
     label: "👤 キャラ",
-    tags:  ["お姉さん", "妹系", "幼なじみ", "ヤンデレ", "ツンデレ",
-            "母性", "クール", "ダウナー", "メスガキ", "ロリ", "男の娘", "ギャル", "学生", "巨乳", "おねショタ"],
+    tags:  ["彼女", "お姉さん", "巨乳", "ギャル", "学生", "ロリ", "妹系", "幼なじみ", "ヤンデレ", "ツンデレ",
+            "クール", "ダウナー", "コスプレ", "メスガキ", "男の娘", "おねショタ", "母性", "サキュバス"],
   },
-  // シチュエーション
-  situation: {
+  situ: {
     label: "🎭 シチュ",
-    tags:  ["NTR", "百合", "ファンタジー", "サキュバス",
-            "催眠/トランス", "異種族", "学園", "男性受け", "逆転あり", "コスプレ", "ハーレム", "強制"],
+    tags:  ["日常/生活", "NTR", "百合", "ハーレム", "学園", "男性受け", "ファンタジー", "催眠/トランス", "逆転あり", "特殊"],
   },
-  // 行為・プレイ内容
-  act: {
-    label: "🔞 行為",
-    tags:  ["手コキ", "フェラチオ", "パイズリ", "中出し", "乳首責め", "オナサポ", "アナル"],
-  },
-  // ムード・強度
   mood: {
     label: "💫 ムード",
-    tags:  ["甘やかし", "密着", "いちゃいちゃ", "ほんのりR18",
-            "長時間", "ループ再生向き"],
+    tags:  ["甘やかし", "密着", "いちゃいちゃ", "ほんのりR18", "さっくり",
+            "甘々", "癒し", "睡眠導入"],
+  },
+  koui_health: {
+    label: "🫶 行為（健全）",
+    tags:  ["耳かき", "囁き", "添い寝", "マッサージ", "ヘッドスパ", "読み聞かせ"],
+  },
+  koui: {
+    label: "🔞 行為",
+    tags:  ["耳舐め", "手コキ", "フェラチオ", "パイズリ", "中出し", "乳首責め", "オナサポ", "アナル", "言葉攻め", "オホ声", "無理やり"],
   },
 };
 
 // 後方互換：バリデーションで使うコアタグ一覧
 const CORE_TAG_KEYS = CORE_TYPES.map(c => c.key);
+
+// タグ定義順リスト（保存・表示時の並び替えに使用）
+const TAG_ORDER_EDITOR = (() => {
+  const order = [];
+  CORE_TYPES.forEach(c => order.push(c.key));
+  Object.values(ATTRIBUTES).forEach(g => g.tags.forEach(t => { if (!order.includes(t)) order.push(t); }));
+  return order;
+})();
+
+function sortTagsByOrder(tags) {
+  return [...tags].sort((a, b) => {
+    const ia = TAG_ORDER_EDITOR.indexOf(a);
+    const ib = TAG_ORDER_EDITOR.indexOf(b);
+    if (ia === -1 && ib === -1) return 0;
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
 
 // 現在選択中のコアタグ（デフォルト：睡眠導入）
 let selectedCore = "睡眠導入";
@@ -1290,6 +1330,12 @@ const CTA_BASE_HEAL = [
   // 行動誘導
   "何もしたくない夜はこれ流して。",
   "ゆっくりほぐされたい人向け。",
+  // 追加
+  "心の疲れを音で流してくれる作品。",
+  "再生するだけで気持ちが楽になる。",
+  "何も考えなくていい夜はこれ。",
+  "静かに癒されたい人向け。",
+  "聴き終わったあと、ふっと軽くなる。",
 ];
 
 // 癒し甘々ベースCTA
@@ -1302,6 +1348,12 @@ const CTA_BASE_HEAL_AMAMA = [
   "そっと甘やかしてもらいながら癒される作品。",
   "体も気持ちも両方休めたい夜はこれ。",
   "優しい声で包んでもらいたいときはこれ。",
+  // 追加
+  "甘くて優しい、ちょうどいい距離感。",
+  "疲れた日に一番刺さるやつ。",
+  "癒されながら甘えられる贅沢な作品。",
+  "疲れた心にそっと寄り添ってくれる。",
+  "甘さと癒しのバランスが絶妙。",
 ];
 
 const CTA_STRONG_TAGS = new Set(["無言", "耳かき", "耳舐め"]);
@@ -1465,6 +1517,13 @@ const CTA_TAG_PHRASES = {
                   "安心感と眠気が同時に来て、そのまま寝落ちします。",
                   "甘やかされているうちに、気づいたら朝になっています。",
                   "声の温かさが続いて、そのまま深く眠れます。"],
+  "日常/生活":   ["そこにいてくれるだけで癒される感覚。",
+                  "特別なことは何もないのに、満たされる。",
+                  "日常の延長線上に甘さがある作品。",
+                  "ふとした瞬間に聴きたくなるタイプ。",
+                  "生活の中にそっと寄り添ってくれる声。",
+                  "毎日聴けるくらいちょうどいい甘さ。",
+                  "気づいたらリピートしてるやつ。"],
 };
 
 // 特徴文のローテーション管理（タグごとに使用済みを記録）
@@ -1593,6 +1652,12 @@ const CTA_BASE_R18 = [
   // 即効性
   "とりあえずこれ試して。",
   "ガチで良かった。",
+  // 追加
+  "再生したら最後まで止まれない。",
+  "試聴だけでも聴いてみて。",
+  "ハマる人は一発でわかるタイプ。",
+  "R18好きなら外さない一本。",
+  "聴いてから判断して。",
 ];
 const CTA_BASE_AMAMA = [
   // 問題解決系
@@ -1607,6 +1672,12 @@ const CTA_BASE_AMAMA = [
   // 行動誘導
   "これ流しとけば間違いない。",
   "ずっと聴いていたくなるタイプ。",
+  // 追加
+  "甘さが続いて、気づいたら没頭してる。",
+  "声だけでこんなに満たされるんだと思う作品。",
+  "甘々系の中でも完成度が高い。",
+  "甘えさせてもらえる安心感がある。",
+  "甘い声がずっと続く、それだけで十分。",
 ];
 const CTA_BASE_R18_AMAMA = [
   "甘えさせてくれる系ならこれ。",
@@ -1619,6 +1690,31 @@ const CTA_BASE_R18_AMAMA = [
   "甘々系R18の中では完成度トップクラス。",
   "甘くて気持ちいい。これで間違いない。",
   "優しくえっちされたい夜はこれ一択。",
+];
+
+// オナサポ記事用CTA（軽め・強め2段階構成）
+const CTA_BASE_ONASAPO_LIGHT = [
+  "とりあえず試聴だけでもOK。",
+  "気になるなら1分だけ聴いてみる。",
+  "イヤホン推奨。没入感を体験する。",
+  "目を閉じて再生するだけ。",
+  "耳元の距離感、想像以上です。",
+  "このシチュ好きなら刺さる。",
+  "初めてならこの1本でOK。",
+  "迷ったらこれを選べば間違いない。",
+];
+
+const CTA_BASE_ONASAPO_STRONG = [
+  "満足感が段違い。まずはこれから。",
+  "しっかり満足したい人はこちら。",
+  "一度聴くと戻れないタイプ。",
+  "今日はこれでリセットする。",
+  "一人の時間をもっと満たしたいなら。",
+  "ハマる人は一発でハマる。",
+  "他と違う「濃さ」を試してみる。",
+  "「物足りなさ」を感じてる人へ。",
+  "この距離感、クセになります。",
+  "今夜これで決める。",
 ];
 
 // R18甘々判定に使うムードタグ
@@ -1647,7 +1743,9 @@ const CTA_TAG_PHRASES_R18 = {
   "オナサポ":  ["一緒にペースを作ってくれる構成で、使いやすい作品です。",
                 "テンポが良くて、最初から最後まで引き込まれます。",
                 "ペースを合わせてくれる構成が絶妙です。",
-                "使いやすくて、気づいたら最後まで聴いてます。"],
+                "使いやすくて、気づいたら最後まで聴いてます。",
+                "没入感が高くて、耳元の距離感が想像以上です。",
+                "一人の時間をしっかり満たしてくれるタイプ。"],
   "バイノーラル": ["イヤホンで聴くと頭の中で音が広がって、没入感が段違いです。",
                 "立体音響で臨場感がまるで違います。",
                 "音が頭の中に広がって、気づいたら没頭しています。",
@@ -1668,6 +1766,10 @@ const CTA_TAG_PHRASES_R18 = {
                 "描写がリアルで、最初から最後まで引き込まれます。",
                 "気づいたら最後まで聴いてるタイプ。",
                 "アナル好きには確実に刺さります。"],
+  "言葉攻め":  ["耳元の言葉が刺さって、気づいたら止まれないタイプ。",
+                "言葉攻め系の中でも完成度が高い作品。",
+                "声と言葉が同時に来て、引き込まれます。",
+                "言葉攻め好きには確実に刺さります。"],
   "甘やかし":  ["ずっと甘えさせてくれる構成で、聴いてるだけで満足感があります。",
                 "甘めの声が続いて、心地よく没入できます。",
                 "甘やかしてくれる声が続いて、引き込まれます。",
@@ -1680,6 +1782,14 @@ const CTA_TAG_PHRASES_R18 = {
                 "近い距離感がずっと続いて、没入感が高い作品です。",
                 "声の距離が近くて、気づいたら没頭しています。",
                 "密着感が続くだけで、じわじわ引き込まれます。"],
+  "日常/生活": ["日常のBGMとして流せるタイプ。",
+                "生活の中にそっと混ざってくる感覚。",
+                "特別じゃないのに、なぜかずっと聴いていられる。",
+                "日常の延長線上に癒しがある作品。"],
+  "特殊":      ["こういう設定、他にはないタイプ。",
+                "刺さる人には確実に刺さる作品。",
+                "珍しい設定が癖になるタイプです。",
+                "他にはない独特の世界観がある作品。"],
 };
 
 // R18用REVIEW_FEATURE
@@ -1778,6 +1888,18 @@ function generateCta(tags) {
   if (!tags || tags.length === 0) return "迷ったらまずこれ。再生してそのまま眠れます。";
 
   const core = getCoreTag(tags);
+
+  // さっくり×オナサポ 組み合わせ専用CTA
+  if (tags.includes("さっくり") && tags.includes("オナサポ")) {
+    const phrases = [
+      "短時間でしっかり満足できるタイプ。",
+      "サクッと済ませたい夜はこれ一択。",
+      "時間がなくてもこれで十分。",
+      "短くてもちゃんと満足できる。",
+      "コンパクトなのに満足感が高い。",
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
 
   // ニッチシチュタグ検知（優先判定）
   const NICHE_TAGS = new Set(["NTR","百合","男の娘","サキュバス","メスガキ","男性受け","逆転あり","催眠/トランス","異種族","乳首責め","強制","ヤンデレ","ハーレム"]);
@@ -2009,7 +2131,50 @@ fTitle.addEventListener("input", () => {
     setAutoCTA(parseTags(fTags.value));
   }
   updatePreview();
+  updateTitleTagSuggestions();
 });
+
+// タイトルからタグ候補を検出してボタン表示
+function updateTitleTagSuggestions() {
+  const wrap = document.getElementById("titleTagSuggestions");
+  const btnWrap = document.getElementById("titleTagSuggestionBtns");
+  if (!wrap || !btnWrap) return;
+
+  const title = fTitle.value.trim();
+  if (!title) { wrap.style.display = "none"; return; }
+
+  // 全タグリストを収集
+  const allTags = [
+    ...CORE_TYPES.map(c => c.key),
+    ...Object.values(ATTRIBUTES).flatMap(g => g.tags ?? [])
+  ];
+  const currentTags = new Set(parseTags(fTags.value));
+
+  // タイトルに含まれていて、まだ登録されていないタグを候補にする
+  const suggestions = allTags.filter(tag =>
+    title.includes(tag) && !currentTags.has(tag)
+  );
+
+  if (suggestions.length === 0) { wrap.style.display = "none"; return; }
+
+  wrap.style.display = "block";
+  btnWrap.innerHTML = "";
+  suggestions.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = `+ ${tag}`;
+    btn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(245,197,24,0.5);background:rgba(245,197,24,0.12);color:var(--amber);cursor:pointer;";
+    btn.onclick = () => {
+      const current = parseTags(fTags.value);
+      if (!current.includes(tag)) {
+        fTags.value = [...current, tag].join(", ");
+        syncTagChips();
+        updatePreview();
+      }
+      updateTitleTagSuggestions(); // 追加後に候補を更新
+    };
+    btnWrap.appendChild(btn);
+  });
+}
 
 // プレビューを更新するフィールド群（fTagsはCTA更新も兼ねるため下で登録）
 [fTitle, fDesc, fImage, fCta].forEach(el =>
@@ -2048,7 +2213,7 @@ function updatePreview() {
       <span>URLかタイトルを入力</span></div>`;
     return;
   }
-  const tagsHtml = tags.map(t => `<span class="preview-tag">${esc(t)}</span>`).join("");
+  const tagsHtml = sortTagsByOrder(tags).map(t => `<span class="preview-tag">${esc(t)}</span>`).join("");
   const imgHtml = img
     ? `<img class="preview-img" src="${esc(safeUrl(img))}" alt="${esc(title)}" onerror="this.style.display='none'">`
     : `<div class="preview-img" style="display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#2a3050">🎧</div>`;
@@ -2120,7 +2285,7 @@ function validateAndBuild() {
 
   if (!valid) return { valid: false };
 
-  const tags = parseTags(fTags.value);
+  const tags = sortTagsByOrder(parseTags(fTags.value));
 
   // コアタグ（CORE_TYPES のいずれか）が含まれているか確認
   if (!tags.some(t => CORE_TAG_KEYS.includes(t))) {
@@ -2136,10 +2301,11 @@ function validateAndBuild() {
       id,
       title,
       maker:       fMaker.value.trim() || "",
+      cv:          fCv.value.trim() ? fCv.value.trim().split("/").map(s => s.trim()).filter(Boolean) : undefined,
       price:       Number(price) || 0,
       url:         safeUrl(url) || url, // ⑨ スキーム検証
       image:       safeUrl(imageVal) || "", // ⑨ 不正URLは空に
-      tags,        // validateAndBuild内でパース済みのものを使い回す
+      tags:        sortTagsByOrder(tags), // 定義順で保存
       description: fDesc.value.trim() || "",
       cta:         fCta.value.trim() || "今すぐ聴いて癒される",
       healing:     healingManual, // null=自動計算、0〜5=手動
@@ -2185,6 +2351,7 @@ function enterEditMode(idx) {
   fId.value       = w.id        || "";
   fTitle.value    = w.title     || "";
   fMaker.value    = w.maker     || "";
+  fCv.value       = (w.cv ?? []).join(" / ");
   fPrice.value    = w.price     || "";
   fImage.value    = w.image     || "";
   fTags.value     = (w.tags || []).join(", ");
@@ -2192,7 +2359,7 @@ function enterEditMode(idx) {
   fCta.value      = w.cta       || "";
   rjHint.textContent = w.id ? `✅ ${w.id}` : "";
 
-  // 癒し度・抜き度の復元（null=自動計算）
+  // 癒し度・刺激度の復元（null=自動計算）
   healingManual = (w.healing != null) ? w.healing : null;
   eroManual     = (w.ero     != null) ? w.ero     : null;
   updateHealingDisplay(healingManual);
@@ -2257,8 +2424,10 @@ updateBtn.addEventListener("click", () => {
 
   works[editIdx] = work;
   persist();
-  clearDraft(); // ⑤ 更新確定時にドラフトを削除
-  renderTable(true); // 【4】force=trueで確実に再描画
+  clearDraft();
+  buildTagFilterBtns();
+  buildCvFilterBtns();
+  renderTable(true);
   updateJson();
   clearForm();
   showToast(`💾「${work.title}」を更新しました`, "info");
@@ -2276,6 +2445,61 @@ cancelEditBtn.addEventListener("click", () => {
 // 前回の renders ハッシュ（軽量差分比較用）
 let lastRenderHash = "";
 
+let activeTagFilter = null;
+let activeCvFilter  = null;
+
+function buildCvFilterBtns() {
+  const wrap = document.getElementById("cvFilterBtns");
+  if (!wrap) return;
+  const allCvs = [...new Set(works.flatMap(w => w.cv ?? []))].sort((a, b) => a.localeCompare(b, 'ja'));
+  wrap.innerHTML = "";
+  if (allCvs.length === 0) return;
+
+  const label = document.createElement("span");
+  label.style.cssText = "font-size:0.65rem;color:var(--muted);padding:2px 4px;flex-shrink:0;";
+  label.textContent = "🎙️ CV:";
+  wrap.appendChild(label);
+
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "すべて";
+  allBtn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${activeCvFilter === null ? "var(--accent)" : "var(--surface2)"};color:${activeCvFilter === null ? "#fff" : "var(--muted)"};cursor:pointer;`;
+  allBtn.onclick = () => { activeCvFilter = null; buildCvFilterBtns(); renderTable(true); };
+  wrap.appendChild(allBtn);
+
+  allCvs.forEach(cv => {
+    const btn = document.createElement("button");
+    btn.textContent = cv;
+    const isActive = activeCvFilter === cv;
+    btn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${isActive ? "#e8819a" : "var(--surface2)"};color:${isActive ? "#fff" : "var(--muted)"};cursor:pointer;`;
+    btn.onclick = () => { activeCvFilter = isActive ? null : cv; buildCvFilterBtns(); renderTable(true); };
+    wrap.appendChild(btn);
+  });
+}
+
+function buildTagFilterBtns() {
+  const wrap = document.getElementById("tagFilterBtns");
+  if (!wrap) return;
+  // 全タグを集計
+  const allTags = [...new Set(works.flatMap(w => w.tags ?? []))].sort((a, b) => a.localeCompare(b, 'ja'));
+  wrap.innerHTML = "";
+
+  // 「すべて」ボタン
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "すべて";
+  allBtn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${activeTagFilter === null ? "var(--accent)" : "var(--surface2)"};color:${activeTagFilter === null ? "#fff" : "var(--muted)"};cursor:pointer;`;
+  allBtn.onclick = () => { activeTagFilter = null; buildTagFilterBtns(); renderTable(true); };
+  wrap.appendChild(allBtn);
+
+  allTags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = tag;
+    const isActive = activeTagFilter === tag;
+    btn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${isActive ? "var(--accent)" : "var(--surface2)"};color:${isActive ? "#fff" : "var(--muted)"};cursor:pointer;`;
+    btn.onclick = () => { activeTagFilter = isActive ? null : tag; buildTagFilterBtns(); renderTable(true); };
+    wrap.appendChild(btn);
+  });
+}
+
 function renderTable(force = false) {
   // ─────────────────────────────────────────────────────
   // TODO: 将来の規模拡大時に以下の3関数に分割すること
@@ -2287,22 +2511,23 @@ function renderTable(force = false) {
 
   // ── フィルタリング ────────────────────────────────────
   const filterQ = listFilter.value.trim().toLowerCase();
-  // ⑦ 軽量ハッシュ：JSON.stringify全件は件数増加時に重いため先頭末尾IDで代替
-  const hash = works.length + "-" + selectedIdx + "-" + filterQ
+  const hash = works.length + "-" + selectedIdx + "-" + filterQ + "-" + (activeTagFilter ?? "") + "-" + (activeCvFilter ?? "")
              + "-" + (works[0]?.id ?? "") + "-" + (works[works.length-1]?.id ?? "");
   if (!force && hash === lastRenderHash) return;
   lastRenderHash = hash;
 
-  const visible = filterQ
-    ? works.filter(w =>
-        (w.title  ?? "").toLowerCase().includes(filterQ) ||
-        (w.id     ?? "").toLowerCase().includes(filterQ) ||
-        (w.tags   ?? []).some(t => t.toLowerCase().includes(filterQ))
-      )
-    : works;
+  const visible = works.filter(w => {
+    const matchQ = !filterQ ||
+      (w.title ?? "").toLowerCase().includes(filterQ) ||
+      (w.id    ?? "").toLowerCase().includes(filterQ) ||
+      (w.tags  ?? []).some(t => t.toLowerCase().includes(filterQ));
+    const matchTag = !activeTagFilter || (w.tags ?? []).includes(activeTagFilter);
+    const matchCv  = !activeCvFilter  || (w.cv  ?? []).includes(activeCvFilter);
+    return matchQ && matchTag && matchCv;
+  });
 
   countBadge.textContent = `${works.length} 件`;
-  listCount.textContent  = filterQ
+  listCount.textContent  = (filterQ || activeTagFilter || activeCvFilter)
     ? `${visible.length}/${works.length}件`
     : `${works.length}件`;
 
@@ -2327,7 +2552,7 @@ function renderTable(force = false) {
       <div class="tbl-title" data-idx="${i}" title="${esc(w.title)}">${esc(w.title)}</div>
       <div class="tbl-id">${esc(w.id) || "—"}</div>
       <div class="tbl-price">${w.price ? Number(w.price).toLocaleString()+"円" : "—"}</div>
-      <div class="tbl-tags">${esc((w.tags||[]).slice(0,3).join(", "))}</div>
+      <div class="tbl-tags">${esc(sortTagsByOrder(w.tags||[]).slice(0,3).join(", "))}</div>
       <div class="tbl-actions">
         <button class="tbl-act-btn ext" data-act="ext" data-idx="${i}" title="DLsiteで開く">↗</button>
         <button class="tbl-act-btn del" data-act="del" data-idx="${i}" title="削除">✕</button>
@@ -2569,9 +2794,76 @@ clearFormBtn.addEventListener("click", () => {
   clearForm();
 });
 
+// ─────────────────────────────────────────
+// DLsiteタグ照合
+// ─────────────────────────────────────────
+const dlsiteTagInput     = document.getElementById("dlsiteTagInput");
+const dlsiteTagImportBtn = document.getElementById("dlsiteTagImportBtn");
+const dlsiteTagMatches   = document.getElementById("dlsiteTagMatches");
+const dlsiteTagMatchBtns = document.getElementById("dlsiteTagMatchBtns");
+
+const ALL_DEFINED_TAGS = [
+  ...CORE_TYPES.map(c => c.key),
+  ...Object.values(ATTRIBUTES).flatMap(g => g.tags ?? [])
+];
+
+function importDlsiteTags() {
+  const raw = dlsiteTagInput.value.trim();
+  if (!raw) return;
+
+  const dlTags = raw.split(/[\s　、,，\/]+/).map(t => t.trim()).filter(Boolean);
+  const currentTags = new Set(parseTags(fTags.value));
+
+  const matched = ALL_DEFINED_TAGS.filter(def =>
+    dlTags.some(dl => dl === def || dl.includes(def) || def.includes(dl))
+    && !currentTags.has(def)
+  );
+
+  dlsiteTagMatches.style.display = "block";
+  dlsiteTagMatchBtns.innerHTML = "";
+
+  if (matched.length === 0) {
+    dlsiteTagMatchBtns.innerHTML = '<span style="font-size:0.72rem;color:var(--muted);">一致するタグが見つかりませんでした</span>';
+    return;
+  }
+
+  const addAllBtn = document.createElement("button");
+  addAllBtn.textContent = `+ すべて追加（${matched.length}件）`;
+  addAllBtn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.5);background:rgba(93,196,168,0.2);color:#5dc4a8;cursor:pointer;font-weight:700;";
+  addAllBtn.onclick = () => {
+    const current = parseTags(fTags.value);
+    fTags.value = [...new Set([...current, ...matched])].join(", ");
+    syncTagChips(); updatePreview(); importDlsiteTags();
+  };
+  dlsiteTagMatchBtns.appendChild(addAllBtn);
+
+  matched.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = `+ ${tag}`;
+    btn.style.cssText = "font-size:0.7rem;padding:2px 10px;border-radius:10px;border:1px solid rgba(93,196,168,0.3);background:rgba(93,196,168,0.08);color:#5dc4a8;cursor:pointer;";
+    btn.onclick = () => {
+      const current = parseTags(fTags.value);
+      if (!current.includes(tag)) {
+        fTags.value = [...current, tag].join(", ");
+        syncTagChips(); updatePreview();
+      }
+      importDlsiteTags();
+    };
+    dlsiteTagMatchBtns.appendChild(btn);
+  });
+}
+
+dlsiteTagImportBtn.addEventListener("click", importDlsiteTags);
+dlsiteTagInput.addEventListener("keydown", e => { if (e.key === "Enter") importDlsiteTags(); });
+
 function clearForm() {
   exitEditMode();
-  urlInput.value = fId.value = fTitle.value = fMaker.value = "";
+  urlInput.value = fId.value = fTitle.value = fMaker.value = fCv.value = "";
+  const sugg = document.getElementById("titleTagSuggestions");
+  if (sugg) sugg.style.display = "none";
+  const dlMatches = document.getElementById("dlsiteTagMatches");
+  if (dlMatches) dlMatches.style.display = "none";
+  if (dlsiteTagInput) dlsiteTagInput.value = "";
   fPrice.value   = fImage.value = fTags.value = fDesc.value = fCta.value = "";
   rjHint.textContent = "";
   clearAllErrors();
@@ -2579,7 +2871,7 @@ function clearForm() {
   updatePreview();
   selectedIdx = -1;
   isAutoCTA = true;
-  // 癒し度・抜き度をリセット（自動計算モードに戻す）
+  // 癒し度・刺激度をリセット（自動計算モードに戻す）
   healingManual = null;
   eroManual     = null;
   updateHealingDisplay(null);
@@ -2902,7 +3194,11 @@ const TAG_MAP = {
   "トランス":     "催眠/トランス",
   "暗示":         "催眠/トランス",
   "常識改変":     "催眠/トランス",
-  "強制":         "強制",
+  "強制":         "無理やり",
+  "合意なし":     "無理やり",
+  "無理やり":     "無理やり",
+  "オホ声":       "オホ声",
+  "ストーリー重視": "ストーリー重視",
   "無理矢理":     "強制",
   "合意なし":     "強制",
 
@@ -2964,6 +3260,10 @@ const TAG_MAP = {
   "オナニーサポート": "オナサポ",
   "アナル":       "アナル",
   "あなる":       "アナル",
+  "言葉攻め":     "言葉攻め",
+  "淫語":         "言葉攻め",
+  "さっくり":     "さっくり",
+  "短時間":       "さっくり",
 
   // 禁止タグ（意味が広すぎる → 空文字で除外）
   "音声":         "",
@@ -3045,6 +3345,8 @@ document.getElementById("copyTagsBtn").addEventListener("click", () => {
 works = loadFromLocal();
 
 buildTagChips();
+buildTagFilterBtns();
+buildCvFilterBtns();
 renderTable(true);
 updateJson();
 
@@ -3065,7 +3367,7 @@ if (draftRestored) {
 
 // 📂 works.json を開くコマンドをコピー
 document.getElementById("openJsonBtn").addEventListener("click", async () => {
-  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && git add data/works.json && git commit -m \"feat: works.json更新\" && git push origin main";
+  const cmd = "cd /c/Users/seiya/Documents/asmr-finder && git add data/works.json && git commit -m \"feat: works.json更新\" && git push origin main && echo \"✅ push完了\" || echo \"❌ エラーあり\"";
   try {
     await navigator.clipboard.writeText(cmd);
     showToast("📂 pushコマンドをコピーしました。Git Bashに貼り付けてください", "ok");

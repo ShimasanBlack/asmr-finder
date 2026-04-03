@@ -992,7 +992,7 @@ const listFilter   = document.getElementById("listFilter"); // 【10】
 const CORE_TYPES = [
   { key: "睡眠導入",   label: "😴 睡眠導入" },
   { key: "癒し",       label: "💚 癒し"     },
-  { key: "甘々",       label: "🍬 甘々"     },
+  { key: "あまあま",       label: "🍬 あまあま"     },
   { key: "R18",        label: "🔞 R18"      },
 ];
 
@@ -1018,7 +1018,7 @@ const ATTRIBUTES = {
   mood: {
     label: "💫 ムード",
     tags:  ["甘やかし", "密着", "いちゃいちゃ", "ほんのりR18", "さっくり",
-            "甘々", "癒し", "睡眠導入"],
+            "あまあま", "癒し", "睡眠導入"],
   },
   koui_health: {
     label: "🫶 行為（健全）",
@@ -1155,12 +1155,12 @@ function syncTagChips() {
 // タグの優先順位（高い順）
 // ニッチタグを先頭に置いて優先的にpickされるようにする
 const CTA_TAG_PRIORITY = [
-  // ニッチシチュ（先に判定）
+  // ① ニッチシチュ（先に判定）
   "NTR", "百合", "男の娘", "サキュバス", "メスガキ", "男性受け", "逆転あり", "催眠/トランス", "異種族",
-  // 通常タグ
-  "無言", "耳かき", "耳舐め", "環境音", "自然音", "雨音",
-  "囁き", "添い寝", "長時間", "バイノーラル", "マッサージ",
-  "読み聞かせ", "甘やかし",
+  // ② 行為・感覚系
+  "無言", "囁き", "添い寝", "長時間", "バイノーラル", "マッサージ", "読み聞かせ", "甘やかし",
+  // ③ 表現・環境系
+  "耳かき", "耳舐め", "環境音", "自然音", "雨音",
 ];
 
 // ニッチシチュ専用フレーズ（健全版・全ジャンル共通）
@@ -1342,7 +1342,7 @@ const CTA_BASE_HEAL = [
   "聴き終わったあと、ふっと軽くなる。",
 ];
 
-// 癒し甘々ベースCTA
+// 癒しあまあまベースCTA
 const CTA_BASE_HEAL_AMAMA = [
   "疲れた夜に甘えたいならこれ。",
   "ほっとしたい＋甘えたい、両方叶う。",
@@ -1643,7 +1643,7 @@ function normalizeTags(tags) {
  * @param {string[]} tags
  * @returns {string}
  */
-// R18・甘々コア用ベースCTA
+// R18・あまあまコア用ベースCTA
 const CTA_BASE_R18 = [
   // 体験系
   "気づいたら最後まで聴いてるタイプ。",
@@ -1679,7 +1679,7 @@ const CTA_BASE_AMAMA = [
   // 追加
   "甘さが続いて、気づいたら没頭してる。",
   "声だけでこんなに満たされるんだと思う作品。",
-  "甘々系の中でも完成度が高い。",
+  "あまあま系の中でも完成度が高い。",
   "甘えさせてもらえる安心感がある。",
   "甘い声がずっと続く、それだけで十分。",
 ];
@@ -1688,10 +1688,10 @@ const CTA_BASE_R18_AMAMA = [
   "優しい雰囲気のR18ならこれ一択。",
   "攻めすぎない甘い系はこれ。",
   "ほどよく甘くてほどよくえっちならこれ。",
-  "甘々とえっちのバランスが絶妙。",
+  "あまあまとえっちのバランスが絶妙。",
   "甘い声でえっちされたいならこれ。",
   "ラブラブ感のあるR18ならこれが正解。",
-  "甘々系R18の中では完成度トップクラス。",
+  "あまあま系R18の中では完成度トップクラス。",
   "甘くて気持ちいい。これで間違いない。",
   "優しくえっちされたい夜はこれ一択。",
 ];
@@ -1721,7 +1721,7 @@ const CTA_BASE_ONASAPO_STRONG = [
   "今夜これで決める。",
 ];
 
-// R18甘々判定に使うムードタグ
+// R18あまあま判定に使うムードタグ
 // R18用フレーズ（タグ別）
 const CTA_TAG_PHRASES_R18 = {
   "手コキ":    ["手の感触がリアルで、最初から最後まで引き込まれます。",
@@ -1810,7 +1810,7 @@ const REVIEW_FEATURE_R18 = {
   "催眠":      "じわじわと引き込まれていく催眠の構成が丁寧で、自然に落ちていける作品。",
   "ダウナー":  "ダウナー系の声質が独特の雰囲気を作り出して、深い没入感につながっている。",
   "メスガキ":  "メスガキ特有のツンとした言い方が癖になるタイプの作品。",
-  // R18甘々系
+  // R18あまあま系
   "甘やかし":  "甘めの声と雰囲気が最後まで続いて、ずっと甘えさせてくれる構成。",
   "いちゃいちゃ": "いちゃいちゃ感が強くて、甘い雰囲気のまま最後まで聴ける作品。",
   "密着":      "密着感のある声が近くでずっと続いて、没入感が高い構成になっている。",
@@ -1868,22 +1868,22 @@ function pickEndingR18(amama = false) {
 
 // ──────────────────────────────────────
 // コアジャンル判定（タグ組み合わせ + ムードタグ補正）
-// 優先順位：R18×甘々 > R18×ムード > R18 > 甘々 > 睡眠導入
+// 優先順位：R18×あまあま > R18×ムード > R18 > あまあま > 睡眠導入
 // ──────────────────────────────────────
 function getCoreTag(tags) {
   const isR18   = tags.includes("R18");
-  const isSweet = tags.includes("甘々");
+  const isSweet = tags.includes("あまあま");
   const isHeal  = tags.includes("癒し");
   const moodCount = tags.filter(t =>
     ["いちゃいちゃ", "密着", "甘やかし"].includes(t)
   ).length;
 
-  if (isR18 && isSweet)       return "R18甘々"; // ① R18 × 甘々（最強）
-  if (isR18 && moodCount >= 2) return "R18甘々"; // ② R18 × ムード2個以上（誤爆防止）
+  if (isR18 && isSweet)       return "R18あまあま"; // ① R18 × あまあま（最強）
+  if (isR18 && moodCount >= 2) return "R18あまあま"; // ② R18 × ムード2個以上（誤爆防止）
   if (isR18)                   return "R18";
-  if (isHeal && isSweet)       return "癒し甘々"; // ③ 癒し × 甘々
-  if (isHeal && moodCount >= 2) return "癒し甘々"; // ④ 癒し × ムード2個以上（誤爆防止）
-  if (isSweet)                 return "甘々";
+  if (isHeal && isSweet)       return "癒しあまあま"; // ③ 癒し × あまあま
+  if (isHeal && moodCount >= 2) return "癒しあまあま"; // ④ 癒し × ムード2個以上（誤爆防止）
+  if (isSweet)                 return "あまあま";
   if (isHeal)                  return "癒し";
   return "睡眠導入";
 }
@@ -1909,7 +1909,7 @@ function generateCta(tags) {
   const NICHE_TAGS = new Set(["NTR","百合","男の娘","サキュバス","メスガキ","男性受け","逆転あり","催眠/トランス","異種族","乳首責め","強制","ヤンデレ","ハーレム"]);
   const nicheTag = tags.find(t => NICHE_TAGS.has(t));
   if (nicheTag) {
-    const isR18core = core === "R18" || core === "R18甘々";
+    const isR18core = core === "R18" || core === "R18あまあま";
     const nicheSet  = isR18core ? CTA_TAG_PHRASES_NICHE_R18 : CTA_TAG_PHRASES_NICHE;
     const nichePhrases = nicheSet[nicheTag];
 
@@ -1937,8 +1937,8 @@ function generateCta(tags) {
     }
   }
 
-  // R18甘々（R18 + ムードタグ補正）
-  if (core === "R18甘々") {
+  // R18あまあま（R18 + ムードタグ補正）
+  if (core === "R18あまあま") {
     const attrTags = tags.filter(t => t !== "R18");
     const [top1]   = extractTopTags(attrTags);
     const base     = pickBase(CTA_BASE_R18_AMAMA);
@@ -1960,9 +1960,9 @@ function generateCta(tags) {
     return `${base} ${phrase}`.trim();
   }
 
-  // 甘々の場合
-  if (core === "甘々") {
-    const [top1] = extractTopTags(tags.filter(t => t !== "甘々"));
+  // あまあまの場合
+  if (core === "あまあま") {
+    const [top1] = extractTopTags(tags.filter(t => t !== "あまあま"));
     const base   = pickBase(CTA_BASE_AMAMA);
     const amamaPhrases = CTA_TAG_PHRASES_AMAMA[top1];
     const phrase = amamaPhrases
@@ -1971,9 +1971,9 @@ function generateCta(tags) {
     return `${base} ${phrase}`.trim();
   }
 
-  // 癒し甘々の場合
-  if (core === "癒し甘々") {
-    const attrTags = tags.filter(t => t !== "癒し" && t !== "甘々");
+  // 癒しあまあまの場合
+  if (core === "癒しあまあま") {
+    const attrTags = tags.filter(t => t !== "癒し" && t !== "あまあま");
     const [top1]   = extractTopTags(attrTags);
     const base     = pickBase(CTA_BASE_HEAL_AMAMA);
     const healPhrases = CTA_TAG_PHRASES_HEAL[top1];
@@ -2013,8 +2013,8 @@ function generateReview(tags, title = "") {
 
   const core = getCoreTag(tags);
 
-  // R18甘々（R18 + ムードタグ補正）
-  if (core === "R18甘々") {
+  // R18あまあま（R18 + ムードタグ補正）
+  if (core === "R18あまあま") {
     const attrTags = tags.filter(t => t !== "R18");
     const [top1, top2] = extractTopTags(attrTags);
     const feature1 = REVIEW_FEATURE_R18[top1] ?? REVIEW_FEATURE[top1] ?? "";
@@ -2039,9 +2039,9 @@ function generateReview(tags, title = "") {
     return `${front} ${ending}`.trim();
   }
 
-  // 癒し甘々の場合
-  if (core === "癒し甘々") {
-    const attrTags = tags.filter(t => t !== "癒し" && t !== "甘々");
+  // 癒しあまあまの場合
+  if (core === "癒しあまあま") {
+    const attrTags = tags.filter(t => t !== "癒し" && t !== "あまあま");
     const [top1, top2] = extractTopTags(attrTags);
     const feature1 = REVIEW_FEATURE[top1] ?? "";
     const feature2 = top2 && REVIEW_FEATURE[top2] && REVIEW_FEATURE[top2] !== feature1
@@ -2063,7 +2063,7 @@ function generateReview(tags, title = "") {
     return `${front} ${ending}`.trim();
   }
 
-  // 睡眠導入・甘々（既存ロジック）
+  // 睡眠導入・あまあま（既存ロジック）
   const [top1, top2] = extractTopTags(tags);
   const feature1 = REVIEW_FEATURE[top1] ?? "";
   const feature2 = top2 && REVIEW_FEATURE[top2] && REVIEW_FEATURE[top2] !== feature1
@@ -2293,7 +2293,7 @@ function validateAndBuild() {
 
   // コアタグ（CORE_TYPES のいずれか）が含まれているか確認
   if (!tags.some(t => CORE_TAG_KEYS.includes(t))) {
-    setFieldError("fld-tags", "err-tags", "コアタグを1つ選択してください（睡眠導入 / 癒し / 甘々 / R18 / 全年齢）");
+    setFieldError("fld-tags", "err-tags", "コアタグを1つ選択してください（睡眠導入 / 癒し / あまあま / R18 / 全年齢）");
     valid = false;
   }
 
@@ -3171,9 +3171,9 @@ const TAG_MAP = {
   "リラックス":   "癒し",
   "長時間":       "長時間",
 
-  // 甘々
-  "甘々":         "甘々",
-  "甘あま":       "甘々",
+  // あまあま
+  "あまあま":         "あまあま",
+  "甘あま":       "あまあま",
 
   // ほんのりR18
   "ほんのりえろ": "ほんのりR18",
