@@ -74,6 +74,24 @@
       <p class="finder-title">もっと作品を探したい人はこちら</p>
       <a href="/index.html" class="btn-finder-common">→ 作品一覧を見る</a>
     `;
+
+    // DLsiteランキングブログパーツを直後に挿入
+    const blogWrap = document.createElement("div");
+    blogWrap.style.cssText = "margin: 24px 0;";
+    blogWrap.innerHTML = `<p style="font-size:.72rem;color:#bbb;margin-bottom:6px;text-align:right;">Powered by DLsite</p>`;
+
+    const s1 = document.createElement("script");
+    s1.type = "text/javascript";
+    s1.text = `blogparts={"base":"https://www.dlsite.com/","type":"ranking","site":"home","query":{"period":"year","options":[null,"-MEN"]},"title":"ランキング","display":"horizontal","detail":"1","column":"h","image":"medium","count":"5","wrapper":"0","autorotate":false,"aid":"ShimasanBlack"}`;
+
+    const s2 = document.createElement("script");
+    s2.type = "text/javascript";
+    s2.src = "https://www.dlsite.com/js/blogparts.js";
+    s2.charset = "UTF-8";
+
+    blogWrap.appendChild(s1);
+    blogWrap.appendChild(s2);
+    el.insertAdjacentElement("afterend", blogWrap);
   });
 
   // ──────────────────────────────────────
