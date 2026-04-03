@@ -763,8 +763,9 @@ select option { background: var(--surface2); }
       <div style="padding:6px 8px;border-bottom:1px solid var(--border);background:var(--surface);">
         <input type="text" id="listFilter"
                placeholder="🔍 タイトル / ID / タグで絞り込み"
-               style="width:100%;font-size:0.78rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;"
+               style="width:100%;font-size:0.78rem;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;margin-bottom:6px;"
                autocomplete="off" />
+        <div id="tagFilterBtns" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
       </div>
 
       <!-- ④ テーブルヘッダー -->
@@ -990,7 +991,7 @@ const ATTRIBUTES = {
   situation: {
     label: "🎭 シチュ",
     tags:  ["NTR", "百合", "ファンタジー", "サキュバス",
-            "催眠/トランス", "異種族", "学園", "男性受け", "逆転あり", "コスプレ", "ハーレム", "強制", "さっくり"],
+            "催眠/トランス", "異種族", "学園", "男性受け", "逆転あり", "コスプレ", "ハーレム", "強制", "さっくり", "日常/生活", "特殊"],
   },
   // 行為・プレイ内容
   act: {
@@ -1290,6 +1291,12 @@ const CTA_BASE_HEAL = [
   // 行動誘導
   "何もしたくない夜はこれ流して。",
   "ゆっくりほぐされたい人向け。",
+  // 追加
+  "心の疲れを音で流してくれる作品。",
+  "再生するだけで気持ちが楽になる。",
+  "何も考えなくていい夜はこれ。",
+  "静かに癒されたい人向け。",
+  "聴き終わったあと、ふっと軽くなる。",
 ];
 
 // 癒し甘々ベースCTA
@@ -1302,6 +1309,12 @@ const CTA_BASE_HEAL_AMAMA = [
   "そっと甘やかしてもらいながら癒される作品。",
   "体も気持ちも両方休めたい夜はこれ。",
   "優しい声で包んでもらいたいときはこれ。",
+  // 追加
+  "甘くて優しい、ちょうどいい距離感。",
+  "疲れた日に一番刺さるやつ。",
+  "癒されながら甘えられる贅沢な作品。",
+  "疲れた心にそっと寄り添ってくれる。",
+  "甘さと癒しのバランスが絶妙。",
 ];
 
 const CTA_STRONG_TAGS = new Set(["無言", "耳かき", "耳舐め"]);
@@ -1465,6 +1478,13 @@ const CTA_TAG_PHRASES = {
                   "安心感と眠気が同時に来て、そのまま寝落ちします。",
                   "甘やかされているうちに、気づいたら朝になっています。",
                   "声の温かさが続いて、そのまま深く眠れます。"],
+  "日常/生活":   ["そこにいてくれるだけで癒される感覚。",
+                  "特別なことは何もないのに、満たされる。",
+                  "日常の延長線上に甘さがある作品。",
+                  "ふとした瞬間に聴きたくなるタイプ。",
+                  "生活の中にそっと寄り添ってくれる声。",
+                  "毎日聴けるくらいちょうどいい甘さ。",
+                  "気づいたらリピートしてるやつ。"],
 };
 
 // 特徴文のローテーション管理（タグごとに使用済みを記録）
@@ -1593,6 +1613,12 @@ const CTA_BASE_R18 = [
   // 即効性
   "とりあえずこれ試して。",
   "ガチで良かった。",
+  // 追加
+  "再生したら最後まで止まれない。",
+  "試聴だけでも聴いてみて。",
+  "ハマる人は一発でわかるタイプ。",
+  "R18好きなら外さない一本。",
+  "聴いてから判断して。",
 ];
 const CTA_BASE_AMAMA = [
   // 問題解決系
@@ -1607,6 +1633,12 @@ const CTA_BASE_AMAMA = [
   // 行動誘導
   "これ流しとけば間違いない。",
   "ずっと聴いていたくなるタイプ。",
+  // 追加
+  "甘さが続いて、気づいたら没頭してる。",
+  "声だけでこんなに満たされるんだと思う作品。",
+  "甘々系の中でも完成度が高い。",
+  "甘えさせてもらえる安心感がある。",
+  "甘い声がずっと続く、それだけで十分。",
 ];
 const CTA_BASE_R18_AMAMA = [
   "甘えさせてくれる系ならこれ。",
@@ -1711,6 +1743,14 @@ const CTA_TAG_PHRASES_R18 = {
                 "近い距離感がずっと続いて、没入感が高い作品です。",
                 "声の距離が近くて、気づいたら没頭しています。",
                 "密着感が続くだけで、じわじわ引き込まれます。"],
+  "日常/生活": ["日常のBGMとして流せるタイプ。",
+                "生活の中にそっと混ざってくる感覚。",
+                "特別じゃないのに、なぜかずっと聴いていられる。",
+                "日常の延長線上に癒しがある作品。"],
+  "特殊":      ["こういう設定、他にはないタイプ。",
+                "刺さる人には確実に刺さる作品。",
+                "珍しい設定が癖になるタイプです。",
+                "他にはない独特の世界観がある作品。"],
 };
 
 // R18用REVIEW_FEATURE
@@ -2300,8 +2340,9 @@ updateBtn.addEventListener("click", () => {
 
   works[editIdx] = work;
   persist();
-  clearDraft(); // ⑤ 更新確定時にドラフトを削除
-  renderTable(true); // 【4】force=trueで確実に再描画
+  clearDraft();
+  buildTagFilterBtns();
+  renderTable(true);
   updateJson();
   clearForm();
   showToast(`💾「${work.title}」を更新しました`, "info");
@@ -2319,6 +2360,32 @@ cancelEditBtn.addEventListener("click", () => {
 // 前回の renders ハッシュ（軽量差分比較用）
 let lastRenderHash = "";
 
+let activeTagFilter = null;
+
+function buildTagFilterBtns() {
+  const wrap = document.getElementById("tagFilterBtns");
+  if (!wrap) return;
+  // 全タグを集計
+  const allTags = [...new Set(works.flatMap(w => w.tags ?? []))].sort();
+  wrap.innerHTML = "";
+
+  // 「すべて」ボタン
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "すべて";
+  allBtn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${activeTagFilter === null ? "var(--accent)" : "var(--surface2)"};color:${activeTagFilter === null ? "#fff" : "var(--muted)"};cursor:pointer;`;
+  allBtn.onclick = () => { activeTagFilter = null; buildTagFilterBtns(); renderTable(true); };
+  wrap.appendChild(allBtn);
+
+  allTags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = tag;
+    const isActive = activeTagFilter === tag;
+    btn.style.cssText = `font-size:0.7rem;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:${isActive ? "var(--accent)" : "var(--surface2)"};color:${isActive ? "#fff" : "var(--muted)"};cursor:pointer;`;
+    btn.onclick = () => { activeTagFilter = isActive ? null : tag; buildTagFilterBtns(); renderTable(true); };
+    wrap.appendChild(btn);
+  });
+}
+
 function renderTable(force = false) {
   // ─────────────────────────────────────────────────────
   // TODO: 将来の規模拡大時に以下の3関数に分割すること
@@ -2330,22 +2397,22 @@ function renderTable(force = false) {
 
   // ── フィルタリング ────────────────────────────────────
   const filterQ = listFilter.value.trim().toLowerCase();
-  // ⑦ 軽量ハッシュ：JSON.stringify全件は件数増加時に重いため先頭末尾IDで代替
-  const hash = works.length + "-" + selectedIdx + "-" + filterQ
+  const hash = works.length + "-" + selectedIdx + "-" + filterQ + "-" + (activeTagFilter ?? "")
              + "-" + (works[0]?.id ?? "") + "-" + (works[works.length-1]?.id ?? "");
   if (!force && hash === lastRenderHash) return;
   lastRenderHash = hash;
 
-  const visible = filterQ
-    ? works.filter(w =>
-        (w.title  ?? "").toLowerCase().includes(filterQ) ||
-        (w.id     ?? "").toLowerCase().includes(filterQ) ||
-        (w.tags   ?? []).some(t => t.toLowerCase().includes(filterQ))
-      )
-    : works;
+  const visible = works.filter(w => {
+    const matchQ = !filterQ ||
+      (w.title ?? "").toLowerCase().includes(filterQ) ||
+      (w.id    ?? "").toLowerCase().includes(filterQ) ||
+      (w.tags  ?? []).some(t => t.toLowerCase().includes(filterQ));
+    const matchTag = !activeTagFilter || (w.tags ?? []).includes(activeTagFilter);
+    return matchQ && matchTag;
+  });
 
   countBadge.textContent = `${works.length} 件`;
-  listCount.textContent  = filterQ
+  listCount.textContent  = (filterQ || activeTagFilter)
     ? `${visible.length}/${works.length}件`
     : `${works.length}件`;
 
@@ -3092,6 +3159,7 @@ document.getElementById("copyTagsBtn").addEventListener("click", () => {
 works = loadFromLocal();
 
 buildTagChips();
+buildTagFilterBtns();
 renderTable(true);
 updateJson();
 
