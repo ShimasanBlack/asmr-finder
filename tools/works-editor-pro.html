@@ -2128,7 +2128,10 @@ function updateTitleTagSuggestions() {
   if (!title) { wrap.style.display = "none"; return; }
 
   // 全タグリストを収集
-  const allTags = Object.values(TAG_GROUPS).flatMap(g => g.tags ?? []);
+  const allTags = [
+    ...CORE_TYPES.map(c => c.key),
+    ...Object.values(ATTRIBUTES).flatMap(g => g.tags ?? [])
+  ];
   const currentTags = new Set(parseTags(fTags.value));
 
   // タイトルに含まれていて、まだ登録されていないタグを候補にする
