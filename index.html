@@ -1626,7 +1626,7 @@
       const TAG_ORDER = (() => {
         const order = [];
         // コアタグを先頭に
-        ["睡眠導入","癒し","あまあま","R18","ほんのりR18"].forEach(t => order.push(t));
+        ["睡眠導入","癒し","あまあま","甘々","R18","ほんのりR18"].forEach(t => order.push(t));
         TAG_GROUPS.forEach(g => g.tags.forEach(t => { if (!order.includes(t)) order.push(t); }));
         return order;
       })();
@@ -2289,7 +2289,7 @@
             else autoHealing = 3;
           }
           // ② あまあま系
-          else if (tags.has("あまあま")) {
+          else if (tags.has("あまあま") || tags.has("甘々")) {
             if (tags.has("耳かき") && tags.has("甘やかし")) autoHealing = 4;
             else if (tags.has("甘やかし") || tags.has("添い寝")) autoHealing = 3;
             else autoHealing = 2;
