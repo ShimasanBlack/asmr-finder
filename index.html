@@ -1303,6 +1303,9 @@
       作品リンクをクリックするとDLsite商品ページへ移動します。
     </p>
     <p style="margin-top:8px;font-size:0.75rem;color:rgba(255,255,255,0.4);">
+      ※ 販売数・評価は掲載時点のものです。最新情報はDLsiteでご確認ください。
+    </p>
+    <p style="margin-top:8px;font-size:0.75rem;color:rgba(255,255,255,0.4);">
       ⚠️ 当サイトは18歳以上を対象としています。未成年の方の閲覧はご遠慮ください。
     </p>
     <p style="margin-top:10px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:0.78rem;">
@@ -1444,9 +1447,13 @@
       // ソート
       const sorted = [...filtered].sort((a, b) => {
         if (currentSort === "popular") {
-          const diff = getClickCount(b.id) - getClickCount(a.id);
-          if (diff !== 0) return diff;
-          return (Number(b.price) || 0) - (Number(a.price) || 0);
+          // 販売数ベース（未登録は癒し度フォールバック）
+          const sa = a.sales ?? null;
+          const sb = b.sales ?? null;
+          if (sa !== null && sb !== null) return sb - sa;
+          if (sa !== null) return -1;
+          if (sb !== null) return 1;
+          return (a.tags?.includes("R18") ? (b.ero ?? 0) - (a.ero ?? 0) : (b.healing ?? 0) - (a.healing ?? 0));
         }
         if (currentSort === "newest") {
           const da = a.createdAt ?? "";
