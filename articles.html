@@ -383,7 +383,7 @@ function renderArticles() {
     if (!showR18 && a.r18) return false;
     if (currentCat === "all") return true;
     return a.cat === currentCat;
-  });
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="no-articles" style="grid-column:1/-1">この記事は現在準備中です。</div>`;
