@@ -596,6 +596,7 @@ select option { background: var(--surface2); }
     <!-- ⑨ エクスポート / インポート -->
     <div class="hdr-btn-group">
       <button class="btn btn-ghost" id="exportBtn" title="JSONをファイルに保存">⬇ Export</button>
+      <button class="btn btn-ghost" id="integrityBtn" title="コアタグの整合性チェック" style="color:#f5c518;border-color:#f5c518;">🔍 整合性確認</button>
       <label for="importFile" class="btn btn-ghost" title="JSONファイルを読み込む" style="cursor:pointer;">⬆ Import</label>
       <button class="btn btn-ghost" id="openJsonBtn" title="works.jsonをpushするコマンドをコピー">📤 works.json をpush</button>
       <input type="file" id="importFile" accept=".json" />
@@ -671,19 +672,6 @@ select option { background: var(--surface2); }
               <input type="number" id="fPrice" tabindex="3" placeholder="880" min="0" />
               <span class="field-err" id="err-price"></span>
             </div>
-            <div class="field">
-              <label>⭐ 評価
-                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意（例：4.91）</span>
-              </label>
-              <input type="number" id="fRating" min="0" max="5" step="0.01" placeholder="4.91" />
-            </div>
-            <div class="field">
-              <label>📦 販売数
-                <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意</span>
-              </label>
-              <input type="number" id="fSales" min="0" step="1" placeholder="2526" />
-            </div>
-
             <!-- 癒し度・刺激度（空欄=自動計算） -->
             <div class="field">
               <label>💚 癒し度
@@ -756,6 +744,21 @@ select option { background: var(--surface2); }
               </div>
               <span class="field-err" id="err-tags"></span>
               <div class="tag-candidates" id="tagCandidates"></div>
+            </div>
+
+            <div class="fg" style="margin-bottom:0;">
+              <div class="field">
+                <label>⭐ 評価
+                  <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意（例：4.91）</span>
+                </label>
+                <input type="number" id="fRating" min="0" max="5" step="0.01" placeholder="4.91" />
+              </div>
+              <div class="field">
+                <label>📦 販売数
+                  <span style="font-size:0.65rem;color:var(--muted);font-weight:400;">任意</span>
+                </label>
+                <input type="number" id="fSales" min="0" step="1" placeholder="2526" />
+              </div>
             </div>
 
             <div class="field full">
@@ -2452,6 +2455,12 @@ updateBtn.addEventListener("click", () => {
   works[editIdx] = work;
   persist();
   clearDraft();
+  // 整合性エラーが解消された場合はハイライトを消す
+  if (integrityErrorMap[work.id]) {
+    const tags = work.tags ?? [];
+    const coreTags = tags.filter(t => CORE_TAG_KEYS.includes(t));
+    if (coreTags.length === 1) delete integrityErrorMap[work.id];
+  }
   buildTagFilterBtns();
   buildCvFilterBtns();
   renderTable(true);
@@ -2574,7 +2583,8 @@ function renderTable(force = false) {
     return `
     <div class="tbl-row ${i === selectedIdx ? 'selected' : ''}"
          data-idx="${i}"
-         draggable="true">
+         draggable="true"
+         style="${integrityErrorMap[w.id] ? `outline:2px solid ${integrityErrorMap[w.id] === 'none' ? '#e8485a' : '#f5c518'};outline-offset:-2px;` : ''}">
       <div class="drag-handle" title="ドラッグで並び替え">⠿</div>
       <div class="tbl-title" data-idx="${i}" title="${esc(w.title)}">${esc(w.title)}</div>
       <div class="tbl-id">${esc(w.id) || "—"}</div>
@@ -2743,8 +2753,68 @@ async function doCopy() {
 // ──────────────────────────────────────
 // ⑨ エクスポート（ダウンロード）
 // ──────────────────────────────────────
+// ─────────────────────────────────────────
+// 整合性チェック（コアタグ）
+// ─────────────────────────────────────────
+let integrityErrorMap = {}; // { [id]: "none" | "multi" }
+
+function checkIntegrity() {
+  const errors = [];
+  works.forEach((w, i) => {
+    const tags = w.tags ?? [];
+    const coreTags = tags.filter(t => CORE_TAG_KEYS.includes(t));
+    if (coreTags.length === 0) {
+      errors.push({ idx: i, id: w.id, title: w.title, type: "none", cores: coreTags });
+    } else if (coreTags.length > 1) {
+      errors.push({ idx: i, id: w.id, title: w.title, type: "multi", cores: coreTags });
+    }
+  });
+
+  // グローバルマップを更新してrenderTableでハイライトを維持
+  integrityErrorMap = {};
+  errors.forEach(e => { integrityErrorMap[e.id] = e.type; });
+  renderTable(true);
+
+  return errors;
+}
+
+const integrityBtn = document.getElementById("integrityBtn");
+integrityBtn.addEventListener("click", () => {
+  const errors = checkIntegrity();
+  if (errors.length === 0) {
+    showToast(`✅ 整合性OK（全${works.length}件・コアタグ正常）`, "ok");
+    return;
+  }
+
+  const lines = errors.map(e => {
+    const label = e.type === "none"
+      ? `❌ コアタグなし`
+      : `⚠️ コアタグ複数（${e.cores.join("・")}）`;
+    return `${label}｜${e.id}｜${e.title.slice(0, 30)}`;
+  });
+
+  showToast(`⚠️ ${errors.length}件の異常を検出しました`, "err");
+  // コンソールにも出力
+  console.group("整合性チェック結果");
+  lines.forEach(l => console.warn(l));
+  console.groupEnd();
+
+  alert(`整合性チェック：${errors.length}件の異常\n\n` + lines.join("\n"));
+});
+
 exportBtn.addEventListener("click", () => {
   if (works.length === 0) { showToast("エクスポートするデータがありません", "err"); return; }
+
+  // エクスポート前に整合性チェック
+  const errors = checkIntegrity();
+  if (errors.length > 0) {
+    const lines = errors.map(e => {
+      const label = e.type === "none" ? "コアタグなし" : `コアタグ複数（${e.cores.join("・")}）`;
+      return `・${e.id}｜${label}`;
+    });
+    const ok = confirm(`⚠️ ${errors.length}件の整合性エラーがあります。\n\n${lines.join("\n")}\n\nこのままエクスポートしますか？`);
+    if (!ok) return;
+  }
   const blob = new Blob([JSON.stringify(works, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
