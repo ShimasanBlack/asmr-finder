@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASMR記事一覧 | ASMR Finder</title>
-  <meta name="description" content="睡眠導入・耳かき・囁きなどASMRの選び方・おすすめ作品を解説した記事一覧。DLsite人気作を厳選紹介。" />
+  <meta name="description" content="睡眠導入・耳かき・囁きなどASMRのおすすめ作品を解説した記事一覧。DLsite人気作を厳選紹介。" />
   <!-- GA4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-10ZKN9D1L2"></script>
   <script>
@@ -211,13 +211,12 @@
 <div class="wrap">
 
   <h1 class="page-title">ASMR記事一覧</h1>
-  <p class="page-desc">睡眠導入・おすすめ作品・選び方など、ASMR関連の記事をまとめています。</p>
+  <p class="page-desc">睡眠導入・あまあま・お姉さんなど、ASMR関連の記事をまとめています。</p>
 
   <!-- カテゴリフィルター -->
   <div class="category-filter" id="categoryFilter">
     <button class="cat-btn active" data-cat="all">すべて</button>
     <button class="cat-btn" data-cat="sleep">睡眠導入</button>
-    <button class="cat-btn" data-cat="howto">選び方</button>
     <button class="cat-btn" data-cat="selection">セレクション</button>
   </div>
 
@@ -255,7 +254,7 @@ const ARTICLES = [
     url:      "/articles/asmr-article-v3.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ330000/RJ329940_img_main.webp",
     emoji:    "😴",
-    date:     "2026-04-02",
+    date:     "2026-04-05",
   },
   {
     id:          "r18-amama-10",
@@ -269,7 +268,7 @@ const ARTICLES = [
     url:      "/articles/r18-amama-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ01474000/RJ01473335_img_main.webp",
     emoji:    "❤️",
-    date:     "2026-04-02",
+    date:     "2026-04-18",
   },
   {
     id:          "natsuyoshi-10",
@@ -282,7 +281,7 @@ const ARTICLES = [
     url:      "/articles/natsuyoshi-asmr-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ01324000/RJ01323001_img_main.webp",
     emoji:    "🎙️",
-    date:     "2026-04-03",
+    date:     "2026-04-30",
   },
   {
     id:          "amama-10",
@@ -295,7 +294,7 @@ const ARTICLES = [
     url:      "/articles/amama-asmr-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ01552000/RJ01551452_img_main.webp",
     emoji:    "🍬",
-    date:     "2026-04-03",
+    date:     "2026-05-17",
   },
   {
     id:          "onasapo-10",
@@ -309,7 +308,7 @@ const ARTICLES = [
     url:      "/articles/onasup-asmr-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ01212000/RJ01211033_img_main.webp",
     emoji:    "💜",
-    date:     "2026-04-03",
+    date:     "2026-06-02",
   },
   {
     id:          "ku100-10",
@@ -322,7 +321,7 @@ const ARTICLES = [
     url:      "/articles/ku100-asmr-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ300000/RJ299717_img_main.webp",
     emoji:    "🎧",
-    date:     "2026-04-04",
+    date:     "2026-06-18",
   },
   {
     id:          "bluearch-cv-20",
@@ -335,7 +334,7 @@ const ARTICLES = [
     url:      "/articles/bluearch-cv-asmr-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ01552000/RJ01551452_img_main.webp",
     emoji:    "🎮",
-    date:     "2026-04-04",
+    date:     "2026-07-03",
   },
   {
     id:          "onesan-10",
@@ -348,7 +347,7 @@ const ARTICLES = [
     url:      "/articles/onesan-asmr-article.html",
     thumb:    "https://img.dlsite.jp/modpub/images2/work/doujin/RJ300000/RJ299717_img_main.webp",
     emoji:    "🎧",
-    date:     "2026-04-04",
+    date:     "2026-07-16",
   },
   // ↓ 新しい記事はここに追記
 ];
@@ -383,7 +382,7 @@ function renderArticles() {
     if (!showR18 && a.r18) return false;
     if (currentCat === "all") return true;
     return a.cat === currentCat;
-  });
+  }).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="no-articles" style="grid-column:1/-1">この記事は現在準備中です。</div>`;
